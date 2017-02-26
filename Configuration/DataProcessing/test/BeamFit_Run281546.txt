@@ -1,0 +1,345 @@
+Runnumber 281546
+BeginTimeOfFit 2016.09.24 12:07:33 GMT 1474718853
+EndTimeOfFit 2016.09.24 12:07:50 GMT 1474718870
+LumiRange 189 - 189
+Type 0
+X0 0
+Y0 0
+Z0 0
+sigmaZ0 0
+dxdz 0
+dydz 0
+BeamWidthX 0
+BeamWidthY 0
+Cov(0,j) 0 0 0 0 0 0 0 
+Cov(1,j) 0 0 0 0 0 0 0 
+Cov(2,j) 0 0 0 0 0 0 0 
+Cov(3,j) 0 0 0 0 0 0 0 
+Cov(4,j) 0 0 0 0 0 0 0 
+Cov(5,j) 0 0 0 0 0 0 0 
+Cov(6,j) 0 0 0 0 0 0 0
+EmittanceX 0
+EmittanceY 0
+BetaStar 0
+Runnumber 281546
+BeginTimeOfFit 2016.09.24 12:07:51 GMT 1474718871
+EndTimeOfFit 2016.09.24 12:08:01 GMT 1474718881
+LumiRange 190 - 190
+Type 0
+X0 0
+Y0 0
+Z0 0
+sigmaZ0 0
+dxdz 0
+dydz 0
+BeamWidthX 0
+BeamWidthY 0
+Cov(0,j) 0 0 0 0 0 0 0 
+Cov(1,j) 0 0 0 0 0 0 0 
+Cov(2,j) 0 0 0 0 0 0 0 
+Cov(3,j) 0 0 0 0 0 0 0 
+Cov(4,j) 0 0 0 0 0 0 0 
+Cov(5,j) 0 0 0 0 0 0 0 
+Cov(6,j) 0 0 0 0 0 0 0
+EmittanceX 0
+EmittanceY 0
+BetaStar 0
+Runnumber 281546
+BeginTimeOfFit 2016.09.24 12:08:16 GMT 1474718896
+EndTimeOfFit 2016.09.24 12:08:36 GMT 1474718916
+LumiRange 191 - 191
+Type 0
+X0 0
+Y0 0
+Z0 0
+sigmaZ0 0
+dxdz 0
+dydz 0
+BeamWidthX 0
+BeamWidthY 0
+Cov(0,j) 0 0 0 0 0 0 0 
+Cov(1,j) 0 0 0 0 0 0 0 
+Cov(2,j) 0 0 0 0 0 0 0 
+Cov(3,j) 0 0 0 0 0 0 0 
+Cov(4,j) 0 0 0 0 0 0 0 
+Cov(5,j) 0 0 0 0 0 0 0 
+Cov(6,j) 0 0 0 0 0 0 0
+EmittanceX 0
+EmittanceY 0
+BetaStar 0
+Runnumber 281546
+BeginTimeOfFit 2016.09.24 12:08:50 GMT 1474718930
+EndTimeOfFit 2016.09.24 12:08:55 GMT 1474718935
+LumiRange 192 - 192
+Type 0
+X0 0
+Y0 0
+Z0 0
+sigmaZ0 0
+dxdz 0
+dydz 0
+BeamWidthX 0
+BeamWidthY 0
+Cov(0,j) 0 0 0 0 0 0 0 
+Cov(1,j) 0 0 0 0 0 0 0 
+Cov(2,j) 0 0 0 0 0 0 0 
+Cov(3,j) 0 0 0 0 0 0 0 
+Cov(4,j) 0 0 0 0 0 0 0 
+Cov(5,j) 0 0 0 0 0 0 0 
+Cov(6,j) 0 0 0 0 0 0 0
+EmittanceX 0
+EmittanceY 0
+BetaStar 0
+Runnumber 281546
+BeginTimeOfFit 2016.09.24 12:09:22 GMT 1474718962
+EndTimeOfFit 2016.09.24 12:09:11 GMT 1474718951
+LumiRange 193 - 193
+Type 0
+X0 0
+Y0 0
+Z0 0
+sigmaZ0 0
+dxdz 0
+dydz 0
+BeamWidthX 0
+BeamWidthY 0
+Cov(0,j) 0 0 0 0 0 0 0 
+Cov(1,j) 0 0 0 0 0 0 0 
+Cov(2,j) 0 0 0 0 0 0 0 
+Cov(3,j) 0 0 0 0 0 0 0 
+Cov(4,j) 0 0 0 0 0 0 0 
+Cov(5,j) 0 0 0 0 0 0 0 
+Cov(6,j) 0 0 0 0 0 0 0
+EmittanceX 0
+EmittanceY 0
+BetaStar 0
+Runnumber 281546
+BeginTimeOfFit 2016.09.24 12:09:35 GMT 1474718975
+EndTimeOfFit 2016.09.24 12:09:40 GMT 1474718980
+LumiRange 194 - 194
+Type 0
+X0 0
+Y0 0
+Z0 0
+sigmaZ0 0
+dxdz 0
+dydz 0
+BeamWidthX 0
+BeamWidthY 0
+Cov(0,j) 0 0 0 0 0 0 0 
+Cov(1,j) 0 0 0 0 0 0 0 
+Cov(2,j) 0 0 0 0 0 0 0 
+Cov(3,j) 0 0 0 0 0 0 0 
+Cov(4,j) 0 0 0 0 0 0 0 
+Cov(5,j) 0 0 0 0 0 0 0 
+Cov(6,j) 0 0 0 0 0 0 0
+EmittanceX 0
+EmittanceY 0
+BetaStar 0
+Runnumber 281546
+BeginTimeOfFit 2016.09.24 12:09:48 GMT 1474718988
+EndTimeOfFit 2016.09.24 12:10:07 GMT 1474719007
+LumiRange 195 - 195
+Type 0
+X0 0
+Y0 0
+Z0 0
+sigmaZ0 0
+dxdz 0
+dydz 0
+BeamWidthX 0
+BeamWidthY 0
+Cov(0,j) 0 0 0 0 0 0 0 
+Cov(1,j) 0 0 0 0 0 0 0 
+Cov(2,j) 0 0 0 0 0 0 0 
+Cov(3,j) 0 0 0 0 0 0 0 
+Cov(4,j) 0 0 0 0 0 0 0 
+Cov(5,j) 0 0 0 0 0 0 0 
+Cov(6,j) 0 0 0 0 0 0 0
+EmittanceX 0
+EmittanceY 0
+BetaStar 0
+Runnumber 281546
+BeginTimeOfFit 2016.09.24 12:10:19 GMT 1474719019
+EndTimeOfFit 2016.09.24 12:10:33 GMT 1474719033
+LumiRange 196 - 196
+Type 0
+X0 0
+Y0 0
+Z0 0
+sigmaZ0 0
+dxdz 0
+dydz 0
+BeamWidthX 0
+BeamWidthY 0
+Cov(0,j) 0 0 0 0 0 0 0 
+Cov(1,j) 0 0 0 0 0 0 0 
+Cov(2,j) 0 0 0 0 0 0 0 
+Cov(3,j) 0 0 0 0 0 0 0 
+Cov(4,j) 0 0 0 0 0 0 0 
+Cov(5,j) 0 0 0 0 0 0 0 
+Cov(6,j) 0 0 0 0 0 0 0
+EmittanceX 0
+EmittanceY 0
+BetaStar 0
+Runnumber 281546
+BeginTimeOfFit 2016.09.24 12:10:57 GMT 1474719057
+EndTimeOfFit 2016.09.24 12:10:39 GMT 1474719039
+LumiRange 197 - 197
+Type 0
+X0 0
+Y0 0
+Z0 0
+sigmaZ0 0
+dxdz 0
+dydz 0
+BeamWidthX 0
+BeamWidthY 0
+Cov(0,j) 0 0 0 0 0 0 0 
+Cov(1,j) 0 0 0 0 0 0 0 
+Cov(2,j) 0 0 0 0 0 0 0 
+Cov(3,j) 0 0 0 0 0 0 0 
+Cov(4,j) 0 0 0 0 0 0 0 
+Cov(5,j) 0 0 0 0 0 0 0 
+Cov(6,j) 0 0 0 0 0 0 0
+EmittanceX 0
+EmittanceY 0
+BetaStar 0
+Runnumber 281546
+BeginTimeOfFit 2016.09.24 12:11:10 GMT 1474719070
+EndTimeOfFit 2016.09.24 12:11:03 GMT 1474719063
+LumiRange 198 - 198
+Type 0
+X0 0
+Y0 0
+Z0 0
+sigmaZ0 0
+dxdz 0
+dydz 0
+BeamWidthX 0
+BeamWidthY 0
+Cov(0,j) 0 0 0 0 0 0 0 
+Cov(1,j) 0 0 0 0 0 0 0 
+Cov(2,j) 0 0 0 0 0 0 0 
+Cov(3,j) 0 0 0 0 0 0 0 
+Cov(4,j) 0 0 0 0 0 0 0 
+Cov(5,j) 0 0 0 0 0 0 0 
+Cov(6,j) 0 0 0 0 0 0 0
+EmittanceX 0
+EmittanceY 0
+BetaStar 0
+Runnumber 281546
+BeginTimeOfFit 2016.09.24 12:11:35 GMT 1474719095
+EndTimeOfFit 2016.09.24 12:11:39 GMT 1474719099
+LumiRange 199 - 199
+Type 0
+X0 0
+Y0 0
+Z0 0
+sigmaZ0 0
+dxdz 0
+dydz 0
+BeamWidthX 0
+BeamWidthY 0
+Cov(0,j) 0 0 0 0 0 0 0 
+Cov(1,j) 0 0 0 0 0 0 0 
+Cov(2,j) 0 0 0 0 0 0 0 
+Cov(3,j) 0 0 0 0 0 0 0 
+Cov(4,j) 0 0 0 0 0 0 0 
+Cov(5,j) 0 0 0 0 0 0 0 
+Cov(6,j) 0 0 0 0 0 0 0
+EmittanceX 0
+EmittanceY 0
+BetaStar 0
+Runnumber 281546
+BeginTimeOfFit 2016.09.24 12:11:51 GMT 1474719111
+EndTimeOfFit 2016.09.24 12:11:49 GMT 1474719109
+LumiRange 200 - 200
+Type 0
+X0 0
+Y0 0
+Z0 0
+sigmaZ0 0
+dxdz 0
+dydz 0
+BeamWidthX 0
+BeamWidthY 0
+Cov(0,j) 0 0 0 0 0 0 0 
+Cov(1,j) 0 0 0 0 0 0 0 
+Cov(2,j) 0 0 0 0 0 0 0 
+Cov(3,j) 0 0 0 0 0 0 0 
+Cov(4,j) 0 0 0 0 0 0 0 
+Cov(5,j) 0 0 0 0 0 0 0 
+Cov(6,j) 0 0 0 0 0 0 0
+EmittanceX 0
+EmittanceY 0
+BetaStar 0
+Runnumber 281546
+BeginTimeOfFit 2016.09.24 12:12:12 GMT 1474719132
+EndTimeOfFit 2016.09.24 12:12:21 GMT 1474719141
+LumiRange 201 - 201
+Type 0
+X0 0
+Y0 0
+Z0 0
+sigmaZ0 0
+dxdz 0
+dydz 0
+BeamWidthX 0
+BeamWidthY 0
+Cov(0,j) 0 0 0 0 0 0 0 
+Cov(1,j) 0 0 0 0 0 0 0 
+Cov(2,j) 0 0 0 0 0 0 0 
+Cov(3,j) 0 0 0 0 0 0 0 
+Cov(4,j) 0 0 0 0 0 0 0 
+Cov(5,j) 0 0 0 0 0 0 0 
+Cov(6,j) 0 0 0 0 0 0 0
+EmittanceX 0
+EmittanceY 0
+BetaStar 0
+Runnumber 281546
+BeginTimeOfFit 2016.09.24 12:12:40 GMT 1474719160
+EndTimeOfFit 2016.09.24 12:12:36 GMT 1474719156
+LumiRange 202 - 202
+Type 0
+X0 0
+Y0 0
+Z0 0
+sigmaZ0 0
+dxdz 0
+dydz 0
+BeamWidthX 0
+BeamWidthY 0
+Cov(0,j) 0 0 0 0 0 0 0 
+Cov(1,j) 0 0 0 0 0 0 0 
+Cov(2,j) 0 0 0 0 0 0 0 
+Cov(3,j) 0 0 0 0 0 0 0 
+Cov(4,j) 0 0 0 0 0 0 0 
+Cov(5,j) 0 0 0 0 0 0 0 
+Cov(6,j) 0 0 0 0 0 0 0
+EmittanceX 0
+EmittanceY 0
+BetaStar 0
+Runnumber 281546
+BeginTimeOfFit 2016.09.24 12:13:07 GMT 1474719187
+EndTimeOfFit 2016.09.24 12:13:15 GMT 1474719195
+LumiRange 203 - 203
+Type 0
+X0 0
+Y0 0
+Z0 0
+sigmaZ0 0
+dxdz 0
+dydz 0
+BeamWidthX 0
+BeamWidthY 0
+Cov(0,j) 0 0 0 0 0 0 0 
+Cov(1,j) 0 0 0 0 0 0 0 
+Cov(2,j) 0 0 0 0 0 0 0 
+Cov(3,j) 0 0 0 0 0 0 0 
+Cov(4,j) 0 0 0 0 0 0 0 
+Cov(5,j) 0 0 0 0 0 0 0 
+Cov(6,j) 0 0 0 0 0 0 0
+EmittanceX 0
+EmittanceY 0
+BetaStar 0

@@ -1,0 +1,46 @@
+Runnumber 281727
+BeginTimeOfFit 2016.09.27 21:08:17 GMT 1475010497
+EndTimeOfFit 2016.09.27 21:08:16 GMT 1475010496
+LumiRange 457 - 457
+Type 0
+X0 0
+Y0 0
+Z0 0
+sigmaZ0 0
+dxdz 0
+dydz 0
+BeamWidthX 0
+BeamWidthY 0
+Cov(0,j) 0 0 0 0 0 0 0 
+Cov(1,j) 0 0 0 0 0 0 0 
+Cov(2,j) 0 0 0 0 0 0 0 
+Cov(3,j) 0 0 0 0 0 0 0 
+Cov(4,j) 0 0 0 0 0 0 0 
+Cov(5,j) 0 0 0 0 0 0 0 
+Cov(6,j) 0 0 0 0 0 0 0
+EmittanceX 0
+EmittanceY 0
+BetaStar 0
+Runnumber 281727
+BeginTimeOfFit 2016.09.27 21:08:17 GMT 1475010497
+EndTimeOfFit 2016.09.27 21:08:16 GMT 1475010496
+LumiRange 457 - 457
+Type 0
+X0 0
+Y0 0
+Z0 0
+sigmaZ0 0
+dxdz 0
+dydz 0
+BeamWidthX 0
+BeamWidthY 0
+Cov(0,j) 0 0 0 0 0 0 0 
+Cov(1,j) 0 0 0 0 0 0 0 
+Cov(2,j) 0 0 0 0 0 0 0 
+Cov(3,j) 0 0 0 0 0 0 0 
+Cov(4,j) 0 0 0 0 0 0 0 
+Cov(5,j) 0 0 0 0 0 0 0 
+Cov(6,j) 0 0 0 0 0 0 0
+EmittanceX 0
+EmittanceY 0
+BetaStar 0

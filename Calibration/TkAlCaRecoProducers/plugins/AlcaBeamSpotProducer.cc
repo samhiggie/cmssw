@@ -57,7 +57,7 @@ AlcaBeamSpotProducer::AlcaBeamSpotProducer(const edm::ParameterSet& iConfig){
 
 //--------------------------------------------------------------------------------------------------
 AlcaBeamSpotProducer::~AlcaBeamSpotProducer(){
-  delete theBeamFitter;
+  //delete theBeamFitter;
 }
 
 //--------------------------------------------------------------------------------------------------
