@@ -1,0 +1,6 @@
+<lcgdict>
+  <class name="reco::PCC" ClassVersion="12">
+   <version ClassVersion="12" checksum="3216246807"/>
+  </class>
+  <class name="edm::Wrapper<reco::PCC>"/>
+</lcgdict>
