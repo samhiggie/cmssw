@@ -44,14 +44,9 @@ class AlcaPCCProducer : public edm::one::EDProducer<edm::EndLuminosityBlockProdu
     int resetFitNLumi_;
     int countEvt_;       //counter
     int countLumi_;      //counter
-    int ftmprun0, ftmprun;
-    int beginLumiOfBSFit_;
-    int endLumiOfBSFit_;
-    std::time_t refBStime[2];
+    int beginLumiOfPCC_;
+    int endLumiOfPCC_;
 
-    //bool write2DB_;
-
-    //reco::PCC * thePCCob;
     std::unique_ptr<reco::PCC> thePCCob;
 
 };
