@@ -9,7 +9,7 @@
 <use   name="CondCore/DBOutputService"/>
 
 <use   name="Calibration/PCCAlCaRecoProducers"/>
-
+<use   name="DataFormats/Luminosity"/>
 <library   file="AlcaPCCProducer.cc" name="AlcaPCCProducer">
   <flags   EDM_PLUGIN="1"/>
 </library>

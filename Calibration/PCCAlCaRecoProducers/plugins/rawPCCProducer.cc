@@ -57,9 +57,11 @@ class rawPCCProducer : public edm::one::EDProducer<edm::EndLuminosityBlockProduc
     std::vector<int> events_;//vector with total events at each bxid.
     std::vector<int> clusterPerBX_;//new vector containing clusters per bxid 
     std::vector<float> rawlumiBX_;//new vector containing clusters per bxid 
+    std::vector<float> errOnLumiByBX_;//standard error per bx
     std::vector<int> goodMods_;//The indicies of all the good modules - not vetoed
     float totalLumi_;//The total raw luminosity from the pixel clusters - not scaled
     float statErrOnLumi_;//the statistical error on the lumi - large num ie sqrt(N)
+
     
     //New output object
     std::unique_ptr<LumiInfo> theLumiOb;
@@ -82,7 +84,7 @@ rawPCCProducer::rawPCCProducer(const edm::ParameterSet& iConfig)
     //recoPixelClusterCounts_ alcaPCCProducer __ALCARECO
     clusterPerBX_.resize(LumiConstants::numBX,0);//new vector containing clusters per bxid 
     rawlumiBX_.resize(LumiConstants::numBX,0);//new vector containing clusters per bxid 
-    
+    errOnLumiByBX_.resize(LumiConstants::numBX,0);
     //produces<reco::PixelClusterCounts, edm::InLumi>("alcaLumi");
     PCCToken=consumes<reco::PixelClusterCounts, edm::InLumi>(PCCInputTag_);
     //PCCToken=consumes<std::unique_ptr<reco::PixelClusterCounts> >(PCCsrc_);
@@ -112,6 +114,14 @@ void rawPCCProducer::beginLuminosityBlock(edm::LuminosityBlock const& lumiSeg, c
 
 //--------------------------------------------------------------------------------------------------
 void rawPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, const edm::EventSetup& iSetup){
+    //reset parameters 
+    totalLumi_=0.0;
+    statErrOnLumi_=0.0;
+    clusterPerBX_.resize(LumiConstants::numBX,0);//new vector containing clusters per bxid 
+    rawlumiBX_.resize(LumiConstants::numBX,0);//new vector containing clusters per bxid 
+    errOnLumiByBX_.resize(LumiConstants::numBX,0);
+    goodMods_.clear();
+
     //Grabbing the info from the PCC ob
     edm::Handle<reco::PixelClusterCounts> PCCHandle; 
     //edm::Handle< std::unique_ptr<reco::PixelClusterCounts> > PCCHandle; 
@@ -126,17 +136,9 @@ void rawPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, con
     events_= PCCob.readEvents();
     clusters_ = PCCob.readCounts();
     
-    //std::cout<<"Print begin Lumi Block"<<std::endl;
-    //New PCC object at the beginning of each lumi section
-    //thePCCob = std::make_unique<reco::PixelClusterCounts>();
-    //std::cout<<"The Count Lumi "<<countLumi_<<std::endl;
-    //std::cout<<"The ftotal "<<ftotalevents<<std::endl;
-    //std::cout<<clusterPerBX_.at(0)<<std::endl;
-    //std::cout<<modID_.at(0)<<std::endl;
-    //std::cout<<clusterPerBX_.size()<<std::endl;
-
-    //removing modules that are vetoed 
+       //removing modules that are vetoed 
     //std::cout<<modVeto_.at(0)<<std::endl;
+
     for (unsigned int i=0;i<modID_.size();i++){
         if (std::find(modVeto_.begin(),modVeto_.end(), modID_.at(i)) == modVeto_.end()){
             goodMods_.push_back(i);
@@ -155,13 +157,38 @@ void rawPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, con
         //}
         for (unsigned int i=0;i<goodMods_.size();i++){
             clusterPerBX_.at(bx)+=clusters_.at(goodMods_.at(i)*int(LumiConstants::numBX)+bx);
-
+           
         //if (index%int(LumiConstants::numBX)==0){
         //    std::cout<<"Next Module "<<modID_.at(index%int(LumiConstants::numBX))<<std::endl;
         //}
         }
+        if (clusterPerBX_.at(bx)!=0){
+            errOnLumiByBX_.at(bx)=1/TMath::Sqrt(clusterPerBX_.at(bx));
+        }
+        else{
+            errOnLumiByBX_.at(bx)=0.0;
+        }
     }
+    std::cout<<"Print end Lumi Block"<<std::endl;
+    for (unsigned int i=0;i<clusterPerBX_.size();i++){
+        if (events_.at(i)!=0){
+            rawlumiBX_.at(i)=clusterPerBX_.at(i)/float(events_.at(i));
+        }
+        //std::cout<<"raw lumi "<<rawlumiBX_.at(i);
+        totalLumi_+=rawlumiBX_.at(i);        
+        statErrOnLumi_+=float(events_.at(i));       
+      
+    }
+    if (statErrOnLumi_!=0){statErrOnLumi_=1/TMath::Sqrt(statErrOnLumi_);}
 
+
+    theLumiOb->setTotalLumi(totalLumi_);
+    theLumiOb->setStatErrorOnLumi(statErrOnLumi_);
+    std::cout<<"The total Luminosity "<<theLumiOb->totalrawLuminosity()<<std::endl;
+    //theLumiOb->fillInstLumi(constantRawLumi);
+    theLumiOb->setErrLumiBX(errOnLumiByBX_);
+    theLumiOb->setInstLumi(rawlumiBX_);
+ 
     
  
 
@@ -169,28 +196,7 @@ void rawPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, con
 
 //--------------------------------------------------------------------------------------------------
 void rawPCCProducer::endLuminosityBlockProduce(edm::LuminosityBlock& lumiSeg, const edm::EventSetup& iSetup){
-    std::cout<<"Print end Lumi Block"<<std::endl;
-    for (unsigned int i=0;i<clusterPerBX_.size();i++){
-        if (events_.at(i)!=0){
-            rawlumiBX_.at(i)=clusterPerBX_.at(i)/float(events_.at(i));
-        }
-        else{
-      
-        }
-        std::cout<<"raw lumi "<<rawlumiBX_.at(i);
-        totalLumi_+=rawlumiBX_.at(i);        statErrOnLumi_+=float(events_.at(i));       
-        statErrOnLumi_+=float(events_.at(i));       
-      
-    }
-    statErrOnLumi_=1/TMath::Sqrt(statErrOnLumi_);
-
-
-    theLumiOb->setTotalLumi(totalLumi_);
-    std::cout<<"The total Luminosity "<<theLumiOb->totalrawLuminosity()<<std::endl;
-    //theLumiOb->fillInstLumi(constantRawLumi);
-    //theLumiOb->setErrLumiBX(rawlumiBX_);
-    theLumiOb->setInstLumi(rawlumiBX_);
-    //lumiSeg.put(std::move(theLumiOb), std::string(trigstring_)); 
+   lumiSeg.put(std::move(theLumiOb), std::string(trigstring_)); 
 
 }
 

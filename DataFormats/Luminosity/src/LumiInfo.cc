@@ -33,8 +33,7 @@ bool LumiInfo::isProductEqual(LumiInfo const& next) const {
 }
 
 void LumiInfo::setInstLumi(std::vector<float>& instLumiByBX) {
-  //instLumiByBX_.assign(instLumiByBX.begin(), instLumiByBX.end());
-  std::cout<<"Hello setLumi "<<std::endl;
+  instLumiByBX_.assign(instLumiByBX.begin(), instLumiByBX.end());
 }
 
 void LumiInfo::setErrLumiBX(std::vector<float>& errLumiByBX){

@@ -86,7 +86,7 @@ public:
   //set the statistical error
   void setStatErrorOnLumi(float statError){ statErrorOnLumi_=statError;}
 
-//private:
+private:
   float totalLuminosity_;
   float statErrorOnLumi_;
   float deadtimeFraction_;
