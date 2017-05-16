@@ -14,6 +14,6 @@
 <library   file="AlcaPCCProducer.cc" name="AlcaPCCProducer">
   <flags   EDM_PLUGIN="1"/>
 </library>
-<library   file="rawPCCProducer.cc" name="rawPCCProducer">
+<library   file="RawPCCProducer.cc" name="RawPCCProducer">
   <flags   EDM_PLUGIN="1"/>
 </library>

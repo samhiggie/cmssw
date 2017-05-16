@@ -1,5 +1,5 @@
 /**_________________________________________________________________
-class:   rawPCCProducer.cc
+class:   RawPCCProducer.cc
 
 description: Creates a LumiInfo object that will contain the luminosity per bunch crossing
              Along with the total lumi and the statistical error... (standard sqrt(N) stats) 
@@ -34,11 +34,11 @@ ________________________________________________________________**/
 #include "FWCore/Framework/interface/LuminosityBlock.h"
 #include "TMath.h"
 
-class rawPCCProducer : public edm::one::EDProducer<edm::EndLuminosityBlockProducer,
+class RawPCCProducer : public edm::one::EDProducer<edm::EndLuminosityBlockProducer,
                                                              edm::one::WatchLuminosityBlocks> {
   public:
-    explicit rawPCCProducer(const edm::ParameterSet&);
-    ~rawPCCProducer();
+    explicit RawPCCProducer(const edm::ParameterSet&);
+    ~RawPCCProducer();
 
   private:
     virtual void beginLuminosityBlock     (edm::LuminosityBlock const& lumiSeg, const edm::EventSetup& iSetup) override final;
@@ -70,13 +70,13 @@ class rawPCCProducer : public edm::one::EDProducer<edm::EndLuminosityBlockProduc
 };
 
 //--------------------------------------------------------------------------------------------------
-rawPCCProducer::rawPCCProducer(const edm::ParameterSet& iConfig)
+RawPCCProducer::RawPCCProducer(const edm::ParameterSet& iConfig)
 {
     //Config Parameters from the config file
-    PCCsrc_ = iConfig.getParameter<edm::ParameterSet>("rawPCCProducerParameters").getParameter<std::string>("PCCobLabel");
-    ProdInst_ = iConfig.getParameter<edm::ParameterSet>("rawPCCProducerParameters").getParameter<std::string>("ProdInst");
-    trigstring_ = iConfig.getParameter<edm::ParameterSet>("rawPCCProducerParameters").getUntrackedParameter<std::string>("trigstring","alcaLumi");
-    modVeto_ = iConfig.getParameter<edm::ParameterSet>("rawPCCProducerParameters").getParameter<std::vector<int>>("modVeto");
+    PCCsrc_ = iConfig.getParameter<edm::ParameterSet>("RawPCCProducerParameters").getParameter<std::string>("PCCobLabel");
+    ProdInst_ = iConfig.getParameter<edm::ParameterSet>("RawPCCProducerParameters").getParameter<std::string>("ProdInst");
+    trigstring_ = iConfig.getParameter<edm::ParameterSet>("RawPCCProducerParameters").getUntrackedParameter<std::string>("trigstring","alcaLumi");
+    modVeto_ = iConfig.getParameter<edm::ParameterSet>("RawPCCProducerParameters").getParameter<std::vector<int>>("modVeto");
     //Initialization of Params in rawPCC
 
     edm::InputTag PCCInputTag_(PCCsrc_, ProdInst_);
@@ -88,11 +88,11 @@ rawPCCProducer::rawPCCProducer(const edm::ParameterSet& iConfig)
 }
 
 //--------------------------------------------------------------------------------------------------
-rawPCCProducer::~rawPCCProducer(){
+RawPCCProducer::~RawPCCProducer(){
 }
 
 //--------------------------------------------------------------------------------------------------
-void rawPCCProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
+void RawPCCProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
     //namespaces
 
     //std::cout<<"A Print Statement"<<std::endl;
@@ -101,7 +101,7 @@ void rawPCCProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
 }
 
 //--------------------------------------------------------------------------------------------------
-void rawPCCProducer::beginLuminosityBlock(edm::LuminosityBlock const& lumiSeg, const edm::EventSetup& iSetup){
+void RawPCCProducer::beginLuminosityBlock(edm::LuminosityBlock const& lumiSeg, const edm::EventSetup& iSetup){
     std::cout<<"Begin Lumi-Block"<<std::endl;
     theLumiOb = std::make_unique<LumiInfo>(); 
     //LumiInfo theLumiOb; 
@@ -109,7 +109,7 @@ void rawPCCProducer::beginLuminosityBlock(edm::LuminosityBlock const& lumiSeg, c
 }
 
 //--------------------------------------------------------------------------------------------------
-void rawPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, const edm::EventSetup& iSetup){
+void RawPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, const edm::EventSetup& iSetup){
     //reset parameters 
     totalLumi_=0.0;
     statErrOnLumi_=0.0;
@@ -191,9 +191,9 @@ void rawPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, con
 }
 
 //--------------------------------------------------------------------------------------------------
-void rawPCCProducer::endLuminosityBlockProduce(edm::LuminosityBlock& lumiSeg, const edm::EventSetup& iSetup){
+void RawPCCProducer::endLuminosityBlockProduce(edm::LuminosityBlock& lumiSeg, const edm::EventSetup& iSetup){
    lumiSeg.put(std::move(theLumiOb), std::string(trigstring_)); 
 
 }
 
-DEFINE_FWK_MODULE(rawPCCProducer);
+DEFINE_FWK_MODULE(RawPCCProducer);
