@@ -17,7 +17,7 @@ from Configuration.EventContent.AlCaRecoOutput_cff import *
 
 ALCARECOStreamEcalCalEtaCalib = cms.FilteredStream(
         responsible = 'Vladimir Litvine',
-        name = 'EcalCalEtaCalib',
+        name = 'ALCARECOEcalCalEtaCalib',
         paths  = (pathALCARECOEcalCalEtaCalib),
         content = OutALCARECOEcalCalEtaCalib.outputCommands,
         selectEvents = OutALCARECOEcalCalEtaCalib.SelectEvents,
@@ -34,7 +34,7 @@ from Configuration.EventContent.AlCaRecoOutput_cff import *
 
 ALCARECOStreamEcalCalPi0Calib = cms.FilteredStream(
         responsible = 'Vladimir Litvine',
-        name = 'EcalCalPi0Calib',
+        name = 'ALCARECOEcalCalPi0Calib',
         paths  = (pathALCARECOEcalCalPi0Calib),
         content = OutALCARECOEcalCalPi0Calib.outputCommands,
         selectEvents = OutALCARECOEcalCalPi0Calib.SelectEvents,
@@ -50,7 +50,7 @@ from Configuration.EventContent.AlCaRecoOutput_cff import *
 
 ALCARECOStreamHcalCalMinBias = cms.FilteredStream(
         responsible = 'Grigory Safronov',
-        name = 'HcalCalMinBias',
+        name = 'ALCARECOHcalCalMinBias',
         paths  = (pathALCARECOHcalCalMinBias),
         content = OutALCARECOHcalCalMinBias.outputCommands,
         selectEvents = OutALCARECOHcalCalMinBias.SelectEvents,
@@ -66,7 +66,7 @@ from Configuration.EventContent.AlCaRecoOutput_cff import *
 
 ALCARECOStreamHcalCalPedestal = cms.FilteredStream(
         responsible = 'Olga Kodolova',
-        name = 'HcalCalPedestal',
+        name = 'ALCARECOHcalCalPedestal',
         paths  = (pathALCARECOHcalCalPedestal),
         content = OutALCARECOHcalCalPedestal.outputCommands,
         selectEvents = OutALCARECOHcalCalPedestal.SelectEvents,
@@ -90,7 +90,7 @@ from Configuration.EventContent.AlCaRecoOutput_cff import *
 
 ALCARECOStreamLumiPixels = cms.FilteredStream(
         responsible = 'Cerminara Gianluca',
-        name = 'LumiPixels',
+        name = 'ALCARECOLumiPixels',
         paths  = (pathALCARECOLumiPixels),
         content = OutALCARECOLumiPixels.outputCommands,
         selectEvents = OutALCARECOLumiPixels.SelectEvents,

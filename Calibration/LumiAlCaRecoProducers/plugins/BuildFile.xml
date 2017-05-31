@@ -17,3 +17,6 @@
 <library   file="RawPCCProducer.cc" name="RawPCCProducer">
   <flags   EDM_PLUGIN="1"/>
 </library>
+<library   file="CorrPCCProducer.cc" name="CorrPCCProducer">
+  <flags   EDM_PLUGIN="1"/>
+</library>
