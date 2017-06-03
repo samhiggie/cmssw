@@ -22,8 +22,8 @@ process.OutALCARECOPromptCalibProdPCC = cms.PSet(
 process.corrPCCProd = cms.EDProducer("CorrPCCProducer",
     CorrPCCProducerParameters = cms.PSet(
         #Mod factor to count lumi and the string to specify output 
-        inLumiObLabel = cms.string("alcaPCCProducerZeroBias"),
-        ProdInst = cms.string("alcaPCCZeroBias"),
+        inLumiObLabel = cms.string("rawPCCtest"),
+        ProdInst = cms.string("rawRECO"),
         resetEveryNLumi = cms.int32(10),
         trigstring = cms.untracked.string("corrPCCtest"), 
     )

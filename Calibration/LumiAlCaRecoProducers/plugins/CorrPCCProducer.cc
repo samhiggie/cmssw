@@ -41,7 +41,7 @@ class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one
     ~CorrPCCProducer();
 
   private:
-    virtual void MakeCorrections ();
+    std::vector<float>& MakeCorrections (std::vector<float>&);
     virtual void beginRun(edm::Run const& runSeg, const edm::EventSetup& iSetup) override final;
     virtual void beginLuminosityBlock(edm::LuminosityBlock const& lumiSeg, const edm::EventSetup& iSetup);
     virtual void endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, const edm::EventSetup& iSetup);
@@ -58,6 +58,7 @@ class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one
     std::string trigstring_; //specifies the trigger Rand or ZeroBias 
     std::vector<float> rawlumiBX_;//new vector containing clusters per bxid 
     std::vector<float> errOnLumiByBX_;//standard error per bx
+    std::vector<float> totalLumiByBX_;//summed lumi
     std::vector<float> correctionList_;//list of scale factors to apply.
     float totalLumi_;//The total raw luminosity from the pixel clusters - not scaled
     float statErrOnLumi_;//the statistical error on the lumi - large num ie sqrt(N)
@@ -81,6 +82,14 @@ CorrPCCProducer::CorrPCCProducer(const edm::ParameterSet& iConfig)
     resetNLumi_=iConfig.getParameter<edm::ParameterSet>("CorrPCCProducerParameters").getParameter<int>("resetEveryNLumi");
     //Initialization of Params
     countLumi_=0;
+    for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
+        totalLumiByBX_.push_back(0);
+    }
+    
+    //Generate a pseudo correction list:Add function to created list here?
+    for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
+        correctionList_.push_back(1.0);
+    }
 
     //Input tag for raw lumi
     edm::InputTag PCCInputTag_(PCCsrc_, ProdInst_);
@@ -93,10 +102,12 @@ CorrPCCProducer::CorrPCCProducer(const edm::ParameterSet& iConfig)
 CorrPCCProducer::~CorrPCCProducer(){
 }
 //--------------------------------------------------------------------------------------------------
-void CorrPCCProducer::MakeCorrections(){
+std::vector<float>& CorrPCCProducer::MakeCorrections(std::vector<float>& corrected_){
+        
     for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
-        correctionList_.push_back(1.0);
-    }
+        corrected_.at(bx)=corrected_.at(bx)*correctionList_.at(bx);//Applying the corrections
+    } 
+    return corrected_;
 }
 
 
@@ -112,7 +123,7 @@ void CorrPCCProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 //--------------------------------------------------------------------------------------------------
 void CorrPCCProducer::beginLuminosityBlock(edm::LuminosityBlock const& lumiSeg, const edm::EventSetup& iSetup){
     std::cout<<"Begin Lumi-Block"<<std::endl;
-    outLumiOb = std::make_unique<LumiInfo>(); 
+    //outLumiOb = std::make_unique<LumiInfo>(); 
     //LumiInfo outLumiOb; 
     countLumi_++;
 
@@ -127,11 +138,7 @@ void CorrPCCProducer::beginRun(edm::Run const& runSeg, const edm::EventSetup& iS
 
 //--------------------------------------------------------------------------------------------------
 void CorrPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, const edm::EventSetup& iSetup){
-    //check to see if end of lumisection
-
-    if (resetNLumi_ > 0 && countLumi_%resetNLumi_!=0) return;
-
-
+    //check to see if end of lumiblock
 
     edm::Handle<LumiInfo> PCCHandle; 
     lumiSeg.getByToken(LumiToken,PCCHandle);
@@ -144,7 +151,11 @@ void CorrPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, co
     //Example of forloop
     //for (unsigned int i=0;i<modID_.size();i++){
         
-    //summing over modules
+    //summing over lumisections
+    for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
+        totalLumiByBX_[bx]+=rawlumiBX_[bx];
+    }
+    outLumiOb->setInstLumi(totalLumiByBX_);   
     
     std::cout<<"Print end Lumi Block"<<std::endl;
 
@@ -155,12 +166,16 @@ void CorrPCCProducer::endRun(edm::Run const& runSeg, const edm::EventSetup& iSet
     //std::cout<<"End Run"<<std::endl;
     //outLumiOb = std::make_unique<LumiInfo>(); 
     //LumiInfo outLumiOb; 
-
+    //sum over the lumi sections
 }
 //--------------------------------------------------------------------------------------------------
 void CorrPCCProducer::endLuminosityBlockProduce(edm::LuminosityBlock& lumiSeg, const edm::EventSetup& iSetup){
-
-    lumiSeg.put(std::move(outLumiOb), std::string(trigstring_)); 
+    //Save if # of lumisections are reached then save
+    if (resetNLumi_ > 0 && countLumi_%resetNLumi_!=0) return;
+    lumiSeg.put(std::move(outLumiOb), std::string(trigstring_));  
+    for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
+        totalLumiByBX_[bx]=0;//reset the total after the save
+    }
 
 }
 //--------------------------------------------------------------------------------------------------
@@ -170,6 +185,9 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
     //LumiInfo outLumiOb; 
     //place a save here.
     runSeg.put(std::move(outLumiOb), std::string(trigstring_)); 
+    for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
+        totalLumiByBX_[bx]=0;//reset the total after the save
+    }
 
 }
 
