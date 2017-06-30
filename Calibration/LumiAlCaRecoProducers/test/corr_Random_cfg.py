@@ -7,7 +7,7 @@ import FWCore.ParameterSet.Config as cms
 process = cms.Process("corrRECO")
 
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/s/shigginb/cmssw/rawLumiWork/src/rawPCC_ZB_1.root')
+    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/s/shigginb/cmssw/CMSSW_9_2_0/src/rawPCC_297227_RD.root')
 )
 #Added process to select the appropriate events 
 process.OutALCARECOPromptCalibProdPCC = cms.PSet(
@@ -22,10 +22,12 @@ process.OutALCARECOPromptCalibProdPCC = cms.PSet(
 process.corrPCCProd = cms.EDProducer("CorrPCCProducer",
     CorrPCCProducerParameters = cms.PSet(
         #Mod factor to count lumi and the string to specify output 
-        inLumiObLabel = cms.string("rawPCCtest"),
-        ProdInst = cms.string("rawRECO"),
-        resetEveryNLumi = cms.int32(10),
-        trigstring = cms.untracked.string("corrPCCtest"), 
+        inLumiObLabel = cms.string("rawPCCProd"),
+        ProdInst = cms.string("rawPCRandom"),
+        resetEveryNLumi=cms.int32(3),
+        trigstring = cms.untracked.string("corrPCCRand"), 
+        type2_a= cms.double(0.00086),
+        type2_b= cms.double(0.014),
     )
 )
 
@@ -40,7 +42,7 @@ process.ALCARECOStreamPromptCalibProdPCC = cms.OutputModule("PoolOutputModule",
         filterName = cms.untracked.string('PromptCalibProdPCC')
     ),
     eventAutoFlushCompressedSize = cms.untracked.int32(5242880),
-    fileName = cms.untracked.string('corrPCC_RD.root'),
+    fileName = cms.untracked.string('corrPCC_297227_RD.root'),
     outputCommands = cms.untracked.vstring('drop *', 
         'keep *_corrPCCProd_*_*')
 )
