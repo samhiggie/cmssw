@@ -11,6 +11,12 @@
 <use   name="Calibration/LumiAlCaRecoProducers"/>
 <use   name="DataFormats/Luminosity"/>
 
+<use name="DataFormats/TrackReco"/>
+<use name="CommonTools/UtilAlgos"/>
+<use name="PhysicsTools/UtilAlgos"/>
+<flags EDM_PLUGIN="1"/>
+
+
 <library   file="AlcaPCCProducer.cc" name="AlcaPCCProducer">
   <flags   EDM_PLUGIN="1"/>
 </library>
@@ -20,3 +26,7 @@
 <library   file="CorrPCCProducer.cc" name="CorrPCCProducer">
   <flags   EDM_PLUGIN="1"/>
 </library>
+
+
+
+

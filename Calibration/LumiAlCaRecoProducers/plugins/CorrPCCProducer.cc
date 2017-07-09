@@ -2,9 +2,19 @@
 class:   CorrPCCProducer.cc
 description: Computes the type1 corrections to the luminosity
 authors:Sam Higginbotham (shigginb@cern.ch) and Chris Palmer (capalmer@cern.ch) 
+Notes:
+1.The producers must be initiated in the Default constructor
+2.Must use a std::unique_ptr to save objects to an EDM Producer submethod 
+3.using .put(std::move(object),std::to_string(prodInst)):
+    a.Cannot save 2 objects to the same product instance
+    b.Cannot save same object to different product instance 
+Solutions:
+1.Save the map<std::pair<int>,*LumiInfo> to Run along with the object. Then in next producer then match the LS range to the object in the runs, gathering the objects at the lumiseciton level. ->Downside could be needing a master normtag-like file with all valid LS.
+2.Save at the LS 
 ________________________________________________________________**/
 
 // C++ standard
+#include <memory>
 #include <string>
 #include <vector>
 // CMS
@@ -13,6 +23,7 @@ ________________________________________________________________**/
 #include "DataFormats/Luminosity/interface/LumiConstants.h"
 //Test for intellegent lumiblocks
 #include "DataFormats/Luminosity/interface/LumiConstants.h"
+#include "DataFormats/Provenance/interface/LuminosityBlockRange.h"
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -23,6 +34,7 @@ ________________________________________________________________**/
 // CMS
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/one/EDProducer.h"
+#include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/EDGetToken.h"
@@ -30,6 +42,9 @@ ________________________________________________________________**/
 #include "FWCore/Framework/interface/LuminosityBlock.h"
 #include "FWCore/Framework/interface/Run.h"
 #include "TMath.h"
+#include "TH1.h"
+#include "TFile.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
 
 class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one::WatchRuns,edm::EndLuminosityBlockProducer,edm::one::WatchLuminosityBlocks> {
   public:
@@ -56,7 +71,9 @@ class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one
     std::string   ProdInst_;//input file product instance 
 
     std::string lumistring = "LumiInfo";   
-    std::string type1facstring = "Type1or2FraOrRes";   
+    std::string type1facString = "Type1fraction";   
+    std::string type1resString = "Type1residual";   
+    std::string type2resString = "Type2residual"; 
 
     std::string trigstring_; //specifices the iov LSs for the object that is saved.  
     std::vector<float> rawlumiBX_;//new vector containing clusters per bxid 
@@ -66,8 +83,20 @@ class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one
     std::vector<float> corr_list_;//list of scale factors to apply.
     float Overall_corr;//The Overall correction to the integrated luminosity
 
-    std::map<std::pair<int,int>, std::unique_ptr<LumiInfo>>::iterator it; 
-    std::map<std::pair<int,int>, std::unique_ptr<LumiInfo>> myInfoPointers;//map to obtain iov for lumiOb corrections to the luminosity. 
+    int totalLS=3000;//Max number of Lumisections in a run! Change this later to something more robust
+    //mergedLS=100;
+    float nBlocks=0;
+    std::vector<std::pair<int,int>> iovs;//move this to global later 
+    std::map<std::pair<int,int>, LumiInfo*>::iterator it; 
+    std::map<std::pair<int,int>, LumiInfo*> myInfoPointers;//map to obtain iov for lumiOb corrections to the luminosity. 
+    //The Penultimate solution....
+    //std::vector<std::pair<std::pair<int,int>,LumiInfo*>> myInfoVector;//Will save this object to the run
+
+    //Why not some histos at this point?!
+    TH1D  *clustersBxHist;
+    TH1D *type1fracHist;
+    TH1D *type1resHist;
+    TH1D *type2resHist;
 
     float type1frac;
     std::vector<float> t1fUncVect;
@@ -92,7 +121,7 @@ class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one
     
     //output 
     std::unique_ptr<LumiInfo> outLumiOb;//lumi object with corrections per BX
-    std::unique_ptr<LumiInfo> thisLSLumiInfo;//lumi object with corrections per BX
+    //std::unique_ptr<LumiInfo> thisLSLumiInfo;//lumi object with corrections per BX
     std::unique_ptr<float> Type1frac;
     std::unique_ptr<float> Type1res;
     std::unique_ptr<float> Type2res;
@@ -141,22 +170,31 @@ CorrPCCProducer::CorrPCCProducer(const edm::ParameterSet& iConfig)
     edm::InputTag PCCInputTag_(PCCsrc_, ProdInst_);
 
     LumiToken=consumes<LumiInfo, edm::InLumi>(PCCInputTag_);
+    
+    nBlocks=(float(totalLS)/float(resetNLumi_));
+    if(nBlocks - int(nBlocks) >=0.5){nBlocks=int(nBlocks)+1;}
+    else{nBlocks=int(nBlocks);}
 
-    //producers 
-    for ( int iLum=0; iLum<5; iLum++){
-        produces<LumiInfo, edm::InRun>(lumistring+std::to_string(iLum));
-        produces<float, edm::InRun>(type1facstring+std::to_string(iLum));
+    for(int iBlock=0; iBlock<nBlocks; iBlock++){
+        iovs.push_back(std::make_pair(iBlock*totalLS/nBlocks+1, (iBlock+1)*totalLS/nBlocks));
     }
-        produces<LumiInfo, edm::InRun>(trigstring_);   
-    //produces<LumiInfo, edm::InRun>(trigstring_);   
-    //produces<float, edm::InRun>( "Type1frac" );
-    //produces<float, edm::InRun>( "Type1res" );
-    //produces<float, edm::InRun>( "Type2res" );
-    //produces<float, edm::InRun>( "T1fUnc" );
-    //produces<float, edm::InRun>( "T1rUnc" );
-    //produces<float, edm::InRun>( "T2rUnc" );
+    //producers 
+    //run123456ls1:500
+    for ( int iLum=0; iLum<nBlocks; iLum++){
+        produces<float, edm::InRun>(type1facString+std::to_string(iovs.at(iLum).first)+"to"+std::to_string(iovs.at(iLum).second));
+        produces<float, edm::InRun>(type1resString+std::to_string(iovs.at(iLum).first)+"to"+std::to_string(iovs.at(iLum).second));
+        produces<float, edm::InRun>(type2resString+std::to_string(iovs.at(iLum).first)+"to"+std::to_string(iovs.at(iLum).second));
+        produces<LumiInfo, edm::InRun>(lumistring+std::to_string(iovs.at(iLum).first)+"to"+std::to_string(iovs.at(iLum).second));
+    }
     
-    
+
+    //TFile Service for histos 
+    edm::Service<TFileService> fs;    
+    //Histos 
+    clustersBxHist = fs->make<TH1D>("# of Clusters Per BX (Normalized by Events)","# of Clusters Per BX (Normalized by Events)",3564,1,3564);
+    type1fracHist = fs->make<TH1D>("Type 1 Fraction","Type 1 Fraction",1000,-0.5,0.5);
+    type1resHist = fs->make<TH1D>("Type 1 Residual","Type 1 Residual",4000,-0.2,0.2);
+    type2resHist = fs->make<TH1D>("Type 2 Residual","Type 2 Residual",4000,-0.2,0.2);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -410,8 +448,9 @@ void CorrPCCProducer::beginLuminosityBlock(edm::LuminosityBlock const& lumiSeg, 
 
 //--------------------------------------------------------------------------------------------------
 void CorrPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, const edm::EventSetup& iSetup){
+
     thisLS = lumiSeg.luminosityBlock();
-    iov1 = lumiSeg.luminosityBlock();
+
     //Try to sum over the lumisections and map to pair std::vector 
     edm::Handle<LumiInfo> PCCHandle; 
     lumiSeg.getByToken(LumiToken,PCCHandle);
@@ -432,16 +471,23 @@ void CorrPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, co
     //setting the map of the iov to the lumiInfo object.
     //myInfoPointers[iov] = &inLumiOb; 
     
-    //const LumiInfo* thisLSLumiInfo; //lumioutput object but will be used with map and saved to Run
-    //thisLSLumiInfo = std::make_unique<LumiInfo>(); 
-    //thisLSLumiInfo = std::unique_ptr<LumiInfo>(); 
-
+    LumiInfo* thisLSLumiInfo; //lumioutput object but will be used with map and saved to Run
+    //thisLSLumiInfo = &inLumiOb;//The address to the in lumiInfo object
+    std::memcpy(&thisLSLumiInfo,&inLumiOb,sizeof(thisLSLumiInfo));
+    //std::cout<<"ThisLSLumiInfo Add: "<<&thisLSLumiInfo<<std::endl;
+    //std::cout<<"InLumiOb Add: "<<&inLumiOb<<std::endl;
 
     for(it=myInfoPointers.begin(); (it!=myInfoPointers.end()); ++it) {
         if( (thisLS >= it->first.first) && (thisLS<= it->first.second) ){
-          thisLSLumiInfo = it->second;
-          found=true;
-          break;
+            thisLSLumiInfo = it->second;
+            found=true;
+            //summing over lumisections
+            for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
+                totalLumiByBX_[bx]+=rawlumiBX_[bx];
+            }
+            thisLSLumiInfo->setInstLumi(totalLumiByBX_);
+            std::cout<<"Total Lumi By BX "<<totalLumiByBX_.at(200)<<std::endl;
+            break;
         }
     }
 
@@ -452,26 +498,29 @@ void CorrPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, co
         // this is a function of the nLS block length and thisLS
         // e.g. if thisLS=56 and nLS=50, then lsKey=(51,100)
         lsKey=std::make_pair(thisLS - thisLS%resetNLumi_+1,thisLS - thisLS%resetNLumi_+resetNLumi_);
-        //myInfoPointers[lsKey]= new LumiInfo();
-        myInfoPointers[lsKey]= std::unique_ptr<LumiInfo>();
+        std::cout<<"Found a new range and object "<<lsKey.first<<":"<<lsKey.second<<std::endl;
+        myInfoPointers[lsKey]= new LumiInfo();
         thisLSLumiInfo = myInfoPointers[lsKey];
-    }
-
-
-    //Deriving the PCC corrections every N lumi
-    if(resetNLumi_!=0 && countLumi_%resetNLumi_==0){
-        CalculateCorrections(totalLumiByBX_,corr_list_, Overall_corr);
-    }
-           
-    //summing over lumisections
-    for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
-        //thisLSLumiInfo->instantLumiByBX_.at(bx)+=rawlumiBX_[bx];
-        totalLumiByBX_[bx]+=rawlumiBX_[bx];
+        for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
+                totalLumiByBX_[bx]=0.0;
+        }
     }
     
-    //std::cout<<"Print end Lumi Block"<<std::endl;
+    ////Trial to save to the lumisections 
+    //if(resetNLumi_!=0&&countLumi_%resetNLumi_!=0){return;}
 
+    //for(it=myInfoPointers.begin(); (it!=myInfoPointers.end()); ++it) {
+    //    totalLumiByBX_=it->second->getInstLumiAllBX();
+    //    CalculateCorrections(totalLumiByBX_,corr_list_, Overall_corr);
+    //    type1fracs.push_back(type1frac);
+    //    type1resids.push_back(mean_type1);
+    //    type2resids.push_back(mean_type2);
+    //    auto tp = std::make_unique<LumiInfo>();
+    //    std::memcpy(&tp,&(it->second),sizeof(tp));
+    //    lumiSeg.put(std::move(tp),(lumistring+std::to_string(2))); 
 
+    //}
+ 
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -505,52 +554,66 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
     //Setting the corrections
     //loop over all the pointers, identifying the iov and object. Combine the corrections?
     outLumiOb = std::make_unique<LumiInfo>(); 
-    Type1frac = std::make_unique<float>(); 
-    Type1res = std::make_unique<float>(); 
-    Type2res = std::make_unique<float>(); 
-    T1fUnc = std::make_unique<float>(); 
-    T1rUnc = std::make_unique<float>(); 
-    T2rUnc = std::make_unique<float>(); 
     //Setting the values for output
-    outLumiOb->setInstLumi(corr_list_);   
-    outLumiOb->setTotalLumi(Overall_corr);   
-    outLumiOb->setStatErrorOnLumi(float(startLS));
-    outLumiOb->setDeadFraction(float(thisLS));
-    *Type1frac=type1frac;
-    *Type1res=mean_type1;
-    *Type2res=mean_type2;
-    t1fUnc=(TMath::RMS(t1fUncVect.begin(),t1fUncVect.end()))/TMath::Sqrt(nTrain);
-    *T1fUnc=t1fUnc;
-    *T1rUnc=t1rUnc;
-    *T2rUnc=t2rUnc;
+        
+    //CalculateCorrections(totalLumiByBX_,corr_list_, Overall_corr);
+    //std::cout<<"Calculating Corrections... "<<std::endl;
+    //thisLSLumiInfo->setInstLumi(corr_list_);   
+    //thisLSLumiInfo->setTotalLumi(Overall_corr);   
 
-    //reset! 
+ 
+    
+    //const LumiInfo& inLumiOb = *(PCCHandle.product()); 
+    //LumiInfo* thisLSLumiInfo; //lumioutput object but will be used with map and saved to Run
+    ////thisLSLumiInfo = &inLumiOb;//The address to the in lumiInfo object
+    //std::memcpy(&thisLSLumiInfo,&inLumiOb,sizeof(thisLSLumiInfo));
+
+    //Setting the data in the run but in a lumisection range
+    for(it=myInfoPointers.begin(); (it!=myInfoPointers.end()); ++it) {
+        totalLumiByBX_=it->second->getInstLumiAllBX();
+        CalculateCorrections(totalLumiByBX_,corr_list_, Overall_corr);
+        auto tp = std::make_unique<LumiInfo>();
+        auto tp1 = std::make_unique<float>();
+        auto tp2 = std::make_unique<float>();
+        auto tp3 = std::make_unique<float>();
+        std::memcpy(&tp,&(it->second),sizeof(tp));
+        *tp1 = type1frac;
+        *tp2 = mean_type1;
+        *tp3 = mean_type2;
+        runSeg.put(std::move(tp),(lumistring+std::to_string(it->first.first)+"to"+std::to_string(it->first.second))); 
+        runSeg.put(std::move(tp1),(type1facString+std::to_string(it->first.first)+"to"+std::to_string(it->first.second))); 
+        runSeg.put(std::move(tp2),(type1resString+std::to_string(it->first.first)+"to"+std::to_string(it->first.second))); 
+        runSeg.put(std::move(tp3),(type2resString+std::to_string(it->first.first)+"to"+std::to_string(it->first.second))); 
+        //histos
+        for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
+            clustersBxHist->SetBinContent(bx,totalLumiByBX_[bx]);    
+        }  
+        std::cout<<"End Run Type1Frac"<<type1frac<<std::endl;
+        std::cout<<"End Run Type1Resid"<<mean_type1<<std::endl;
+        std::cout<<"End Run Type2Resid"<<mean_type2<<std::endl;
+        type1fracHist->Fill(type1frac);
+        type1resHist->Fill(mean_type1);
+        type2resHist->Fill(mean_type2);
+
+        //reset just in case
+        type1frac=0.0;
+        mean_type1=0.0;
+        mean_type2=0.0;
+    }
+   
+
+    //for (int iLum=0; iLum<nBlocks; iLum++){
+    //       float thistype1f=3.14159;
+    //       auto result = std::make_unique<float>();
+    //       *result = thistype1f;
+    //      runSeg.put(std::move(result), (type1facstring+std::to_string(iovs.at(iLum).first)+"to"+std::to_string(iovs.at(iLum).second)));
+    //}   
+//reset! 
     for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
         totalLumiByBX_[bx]=0;//reset the total after the save
     }
-    
-    runSeg.put(std::move(outLumiOb),std::string(lumistring+std::to_string(1))); 
-    runSeg.put(std::move(Type1frac),type1facstring+std::to_string(0)); 
-    runSeg.put(std::move(Type1res),type1facstring+std::to_string(1)); 
-    runSeg.put(std::move(Type2res),type1facstring+std::to_string(2)); 
-    runSeg.put(std::move(T1fUnc),type1facstring+std::to_string(3)); 
-    runSeg.put(std::move(T1rUnc),type1facstring+std::to_string(4)); 
-    
-
-    for(it=myInfoPointers.begin(); (it!=myInfoPointers.end()); ++it) {
-        runSeg.put(std::move(it->second),std::string(trigstring_)); 
-
-    }
 
 
-    //runSeg.put(std::move(outLumiOb),std::string(trigstring_)); 
-    //runSeg.put(std::move(Type1frac),"Type1frac"); 
-    //runSeg.put(std::move(Type1res),"Type1res"); 
-    //runSeg.put(std::move(Type2res),"Type2res"); 
-    //runSeg.put(std::move(T1fUnc),"T1fUnc"); 
-    //runSeg.put(std::move(T1rUnc),"T1rUnc"); 
-    //runSeg.put(std::move(T2rUnc),"T2rUnc"); 
-    
  
 
 }
