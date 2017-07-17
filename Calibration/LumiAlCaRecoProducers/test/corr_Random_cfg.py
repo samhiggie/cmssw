@@ -8,6 +8,7 @@ process = cms.Process("corrRECO")
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/s/shigginb/cmssw/CMSSW_9_2_0/src/rawPCC_297411_RD.root')
+    #fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/s/shigginb/cmssw/CMSSW_9_2_0/src/rawPCC_297227_RD.root')
 )
 #Added process to select the appropriate events 
 process.OutALCARECOPromptCalibProdPCC = cms.PSet(
@@ -24,15 +25,17 @@ process.corrPCCProd = cms.EDProducer("CorrPCCProducer",
         #Mod factor to count lumi and the string to specify output 
         inLumiObLabel = cms.string("rawPCCProd"),
         ProdInst = cms.string("rawPCRandom"),
-        resetEveryNLumi=cms.int32(30),
+        resetEveryNLumi=cms.int32(50),
         trigstring = cms.untracked.string("corrPCCRand"), 
         type2_a= cms.double(0.00086),
         type2_b= cms.double(0.014),
     )
 )
-process.TFileService = cms.Service("TFileService",
-                                       fileName = cms.string('histodemo.root')
-                                   )
+
+#output file service for the histograms 
+#process.TFileService = cms.Service("TFileService",
+#                                       fileName = cms.string('histodemo2.root')
+#                                   )
 
 #From the end path, this is where we specify format for our output.
 process.ALCARECOStreamPromptCalibProdPCC = cms.OutputModule("PoolOutputModule",
@@ -48,6 +51,28 @@ process.ALCARECOStreamPromptCalibProdPCC = cms.OutputModule("PoolOutputModule",
     outputCommands = cms.untracked.vstring('drop *', 
         'keep *_corrPCCProd_*_*')
 )
+
+#Output for the Database
+process.load("CondCore.CondDB.CondDB_cfi")
+#process.load("CondCore.DBCommon.CondDBCommon_cfi")
+
+
+process.CondDB.connect = "sqlite_file:testcorrLumi.db"
+process.PoolDBOutputService = cms.Service("PoolDBOutputService",
+    process.CondDB,
+    toPut = cms.VPSet(
+    cms.PSet(record = cms.string('Corrections'),tag = cms.string('TestLSBasedCorrLumi')),
+    cms.PSet(record = cms.string('Type1Frac'),tag = cms.string('TestLSBasedCorrLumi')),
+    cms.PSet(record = cms.string('Type1Residual'),tag = cms.string('TestLSBasedCorrLumi')),
+    cms.PSet(record = cms.string('Type2Residual'),tag = cms.string('TestLSBasedCorrLumi')),
+    cms.PSet(record = cms.string('OverallCorr'),tag = cms.string('TestLSBasedCorrLumi'))
+     ),
+    loadBlobStreamer = cms.untracked.bool(False),
+    timetype   = cms.untracked.string('lumiid')
+#    timetype   = cms.untracked.string('runnumber')
+)
+
+
 
 
 #
