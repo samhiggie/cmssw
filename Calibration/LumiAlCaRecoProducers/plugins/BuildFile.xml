@@ -2,18 +2,19 @@
 <use   name="FWCore/Framework"/>
 <use   name="FWCore/ParameterSet"/>
 
-<use   name="CondCore/Utilities"/> 
+<!--<use   name="CondCore/Utilities"/>--> 
 <use   name="FWCore/ServiceRegistry"/>
 <use   name="FWCore/PluginManager"/>
-<use   name="CondFormats/DataRecord"/>
+<use name="CondFormats/MyLumiCorrections"/>
+<use name="CoralBase"/>
 <use   name="CondCore/DBOutputService"/>
 
 <use   name="Calibration/LumiAlCaRecoProducers"/>
 <use   name="DataFormats/Luminosity"/>
 
-<use name="DataFormats/TrackReco"/>
+<!--<use name="DataFormats/TrackReco"/>
 <use name="CommonTools/UtilAlgos"/>
-<use name="PhysicsTools/UtilAlgos"/>
+<use name="PhysicsTools/UtilAlgos"/>-->
 <flags EDM_PLUGIN="1"/>
 
 
@@ -26,7 +27,7 @@
 <library   file="CorrPCCProducer.cc" name="CorrPCCProducer">
   <flags   EDM_PLUGIN="1"/>
 </library>
-
-
-
+<library   file="LumiPCCProducer.cc" name="LumiPCCProducer">
+  <flags   EDM_PLUGIN="1"/>
+</library>
 

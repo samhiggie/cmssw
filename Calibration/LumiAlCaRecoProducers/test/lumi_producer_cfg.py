@@ -4,90 +4,82 @@
 #########################
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("ALCARECO")
+process = cms.Process("LUMI")
 
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:/eos/cms/tier0/store/backfill/1/data/Tier0_Test_SUPERBUNNIES_vocms047/AlCaLumiPixels/ALCARECO/AlCaPCCZeroBias-PromptReco-v180/000/295/463/00000/6894868F-A748-E711-A56E-02163E01A30C.root')
+    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/s/shigginb/public/rawPCC_297411_ZB.root')
 )
-
 #Added process to select the appropriate events 
 process.OutALCARECOPromptCalibProdPCC = cms.PSet(
     SelectEvents = cms.untracked.PSet(
         SelectEvents = cms.vstring('pathALCARECOPromptCalibProdPCC')
     ),
     outputCommands = cms.untracked.vstring('drop *', 
-        'keep *_alcaPCCProducer_*_*', 
-        'keep *_MEtoEDMConvertSiStrip_*_*')
+        'keep *_lumiPCCProd_*_*')
 )
+
+#Trial to see if an SQLite file can be READ locally - will use this for the LumiPCCProducer..
+process.load("CondCore.CondDB.CondDB_cfi")
+#process.GlobalTag.globaltag = '92X_dataRun2_Prompt_v4'
+
+process.CondDB.connect = 'sqlite_file:/afs/cern.ch/work/s/shigginb/cmssw/CMSSW_9_2_0/src/testcorrLumi.db'
+
+process.PoolDBESSource = cms.ESSource("PoolDBESSource",
+    process.CondDB,
+    DumpStat=cms.untracked.bool(True),
+    toGet = cms.VPSet(cms.PSet(
+        record = cms.string('MyLumiCorrectionsRcd'),
+        tag = cms.string("TestCorrections")
+    )),
+)
+
+
 #Make sure that variables match in producer.cc and .h
-process.alcaPCCProducer = cms.EDProducer("AlcaPCCProducer",
-    AlcaPCCProducerParameters = cms.PSet(
-        WriteToDB = cms.bool(False),
-        pixelClusterLabel = cms.InputTag("siPixelClustersForLumi"), 
+process.lumiPCCProd = cms.EDProducer("LumiPCCProducer",
+    LumiPCCProducerParameters = cms.PSet(
         #Mod factor to count lumi and the string to specify output 
+        PCCobLabel = cms.string("rawPCCProd"),
+        ProdInst = cms.string("rawPCZeroBias"),
         resetEveryNLumi = cms.untracked.int32(1),
-        trigstring = cms.untracked.string("alcaPCCZB") 
-    ),
+        trigstring = cms.untracked.string("rawPCCtest"), 
+),
+    toGet = cms.VPSet(cms.PSet( 
+        record = cms.string('MyLumiCorrectionsRcd'),
+        tag = cms.string("TestCorrections")
+    ))
 )
 
-process.OutALCARECOLumiPixels = cms.PSet(
-    SelectEvents = cms.untracked.PSet(
-        SelectEvents = cms.vstring('pathALCARECOLumiPixels')
-    ),
-    outputCommands = cms.untracked.vstring('drop *', 
-        'keep *_siPixelClustersForLumi_*_*', 
-        'keep *_TriggerResults_*_HLT')
-)
+#process.get = cms.EDAnalyzer("EventSetupRecordDataGetter",
+#    toGet = cms.VPSet(cms.PSet(
+#        record = cms.string('Corrections'),
+#        data = cms.vstring('TestLSBasedCorrLumi')
+#    )),
+#    verbose = cms.untracked.bool(True)
+#)
+#
+# A data source must always be defined. We don't need it, so here's a dummy one.
+#process.source = cms.Source("EmptyIOVSource",
+#    timetype = cms.string('lumiid'),
+#    firstValue = cms.uint64(1),
+#    lastValue = cms.uint64(1),
+#    interval = cms.uint64(1)
+#)
+#
+#process.path = cms.Path(process.get)
 
 
-process.OutALCARECOLumiPixels_noDrop = cms.PSet(
-    SelectEvents = cms.untracked.PSet(
-        SelectEvents = cms.vstring('pathALCARECOLumiPixels')
-    ),
-    outputCommands = cms.untracked.vstring('keep *_siPixelClustersForLumi_*_*', 
-        'keep *_TriggerResults_*_HLT')
-)
 
-process.siPixelClustersForLumi = cms.EDProducer("SiPixelClusterProducer",
-    ChannelThreshold = cms.int32(1000),
-    ClusterThreshold = cms.double(4000.0),
-    MissCalibrate = cms.untracked.bool(True),
-    SeedThreshold = cms.int32(1000),
-    SplitClusters = cms.bool(False),
-    VCaltoElectronGain = cms.int32(65),
-    VCaltoElectronOffset = cms.int32(-414),
-    maxNumberOfClusters = cms.int32(-1),
-    payloadType = cms.string('Offline'),
-    src = cms.InputTag("siPixelDigisForLumi")
-)
-
-
-process.siPixelDigisForLumi = cms.EDProducer("SiPixelRawToDigi",
-    CablingMapLabel = cms.string(''),
-    ErrorList = cms.vint32(29),
-    IncludeErrors = cms.bool(True),
-    InputLabel = cms.InputTag("hltFEDSelectorLumiPixels"),
-    Regions = cms.PSet(
-
-    ),
-    Timing = cms.untracked.bool(False),
-    UsePhase1 = cms.bool(False),
-    UsePilotBlade = cms.bool(False),
-    UseQualityInfo = cms.bool(False),
-    UserErrorList = cms.vint32(40)
-)
+#process.GlobalTag.toGet.append(
+# cms.PSet(
+#   connect = cms.string('sqlite_file:/afs/cern.ch/work/s/shigginb/cmssw/CMSSW_9_1_1_patch1/src/testcorrLumi.db'),
+#   record = cms.string("Corrections"),
+#   tag = cms.string("TestLSBasedCorrLumi")),
+#)
 
 
 
 
-#HLT filter for PCC
-process.ALCARECOHltFilterForPCC = cms.EDFilter("HLTHighLevel",
-    HLTPaths = cms.vstring("*ZeroBias*"),
-    eventSetupPathsKey = cms.string(""),
-    TriggerResultsTag = cms.InputTag("TriggerResults","","HLT"),
-    andOr = cms.bool(True),
-    throw = cms.bool(False)
-)
+
 #From the end path, this is where we specify format for our output.
 process.ALCARECOStreamPromptCalibProdPCC = cms.OutputModule("PoolOutputModule",
     SelectEvents = cms.untracked.PSet(
@@ -98,24 +90,23 @@ process.ALCARECOStreamPromptCalibProdPCC = cms.OutputModule("PoolOutputModule",
         filterName = cms.untracked.string('PromptCalibProdPCC')
     ),
     eventAutoFlushCompressedSize = cms.untracked.int32(5242880),
-    fileName = cms.untracked.string('ProdPCC_ZeroBias_1.root'),
+    fileName = cms.untracked.string('correctedLumi.root'),
     outputCommands = cms.untracked.vstring('drop *', 
-        'keep *_alcaPCCProducer_*_*', 
-        'keep *_MEtoEDMConvertSiStrip_*_*')
+        'keep *_lumiPCCProd_*_*')
 )
 
 
 #
-process.alcaPCC = cms.Sequence(process.alcaPCCProducer)
+process.alcaLumi = cms.Sequence(process.lumiPCCProd)
 
 #This is the key sequence that we are adding first...
-process.seqALCARECOPromptCalibProdPCC = cms.Sequence(process.ALCARECOHltFilterForPCC+process.alcaPCCProducer)
+process.seqALCARECOPromptCalibProdPCC = cms.Sequence(process.lumiPCCProd)
 
 process.pathALCARECOPromptCalibProdPCC = cms.Path(process.seqALCARECOPromptCalibProdPCC)
 
-process.seqALCARECOLumiPixels = cms.Sequence(process.siPixelDigisForLumi+process.siPixelClustersForLumi)
+#process.seqALCARECOLumiPixels = cms.Sequence(process.siPixelDigisForLumi+process.siPixelClustersForLumi)
 
-process.pathALCARECOLumiPixels = cms.Path(process.seqALCARECOLumiPixels)
+#process.pathALCARECOLumiPixels = cms.Path(process.seqALCARECOLumiPixels)
 
 process.ALCARECOStreamPromptCalibProdOutPath = cms.EndPath(process.ALCARECOStreamPromptCalibProdPCC)
 
@@ -142,12 +133,12 @@ process.MessageLogger = cms.Service("MessageLogger",
         FwkReport = cms.untracked.PSet(
             limit = cms.untracked.int32(10000000),
             optionalPSet = cms.untracked.bool(True),
-            reportEvery = cms.untracked.int32(10000)
+            reportEvery = cms.untracked.int32(1000000)
         ),
         FwkSummary = cms.untracked.PSet(
             limit = cms.untracked.int32(10000000),
             optionalPSet = cms.untracked.bool(True),
-            reportEvery = cms.untracked.int32(100000)
+            reportEvery = cms.untracked.int32(1000000)
         ),
         INFO = cms.untracked.PSet(
             limit = cms.untracked.int32(0)
@@ -205,7 +196,8 @@ process.MessageLogger = cms.Service("MessageLogger",
     )
 )
 #added line for additional output summary `
-process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
+#process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True),SkipEvent = cms.untracked.vstring('ProductNotFound') )
+process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
 
 
 process.schedule = cms.Schedule(*[ process.pathALCARECOPromptCalibProdPCC, process.ALCARECOStreamPromptCalibProdOutPath ])

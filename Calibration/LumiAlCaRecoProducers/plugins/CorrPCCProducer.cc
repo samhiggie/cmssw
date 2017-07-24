@@ -47,6 +47,8 @@ ________________________________________________________________**/
 #include "TFile.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "CondCore/DBOutputService/interface/PoolDBOutputService.h"
+#include "CondFormats/MyLumiCorrections/interface/MyLumiCorrections.h"
+#include "CondFormats/Serialization/interface/Serializable.h"
 
 class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one::WatchRuns,edm::EndLuminosityBlockProducer,edm::one::WatchLuminosityBlocks> {
   public:
@@ -131,6 +133,10 @@ class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one
     std::unique_ptr<float> T1fUnc;
     std::unique_ptr<float> T1rUnc;
     std::unique_ptr<float> T2rUnc;
+    
+    MyLumiCorrections* pMyLumiCorrections;
+    
+
 };
 
 //--------------------------------------------------------------------------------------------------
@@ -519,29 +525,39 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
 
         totalLumiByBX_=it->second->getInstLumiAllBX();
 
-        CalculateCorrections(totalLumiByBX_,corr_list_, Overall_corr);
+        CalculateCorrections(totalLumiByBX_,corr_list_, Overall_corr); 
 
-        std::vector<float> *pointer;
-        float *tp1;
-        float *tp2;
-        float *tp3;
-        float *tp4;
+        //std::vector<float> *pointer;
+        //float *tp1;
+        //float *tp2;
+        //float *tp3;
+        //float *tp4;
 
-        pointer = &corr_list_;
-        tp1 = &type1frac;
-        tp2 = &mean_type1;
-        tp3 = &mean_type2;
-        tp4 = &Overall_corr;
+        //pointer = &corr_list_;
+        //tp1 = &type1frac;
+        //tp2 = &mean_type1;
+        //tp3 = &mean_type2;
+        //tp4 = &Overall_corr;
 
 
         thisIOV = (cond::Time_t)(it->first.first);
 
         //Writing the corrections to SQL lite file for db. 
-        poolDbService->writeOne<std::vector<float>>(pointer,thisIOV,"Corrections"); 
-        poolDbService->writeOne<float>(tp1,thisIOV,"Type1Frac"); 
-        poolDbService->writeOne<float>(tp2,thisIOV,"Type1Residual"); 
-        poolDbService->writeOne<float>(tp3,thisIOV,"Type2Residual"); 
-        poolDbService->writeOne<float>(tp4,thisIOV,"OverallCorr"); 
+        MyLumiCorrections* pMyLumiCorrections = new MyLumiCorrections();
+        pMyLumiCorrections->m_overallCorrection=Overall_corr;
+        pMyLumiCorrections->m_type1Fraction=type1frac;
+        pMyLumiCorrections->m_type1Residual=mean_type1;
+        pMyLumiCorrections->m_type2Residual=mean_type2;
+        
+
+
+
+        poolDbService->writeOne<MyLumiCorrections>(pMyLumiCorrections,thisIOV,"MyLumiCorrectionsRcd"); 
+        //poolDbService->writeOne<std::vector<float>>(pointer,thisIOV,"Corrections"); 
+        //poolDbService->writeOne<float>(tp1,thisIOV,"Type1Frac"); 
+        //poolDbService->writeOne<float>(tp2,thisIOV,"Type1Residual"); 
+        //poolDbService->writeOne<float>(tp3,thisIOV,"Type2Residual"); 
+        //poolDbService->writeOne<float>(tp4,thisIOV,"OverallCorr"); 
 
          
         //histos

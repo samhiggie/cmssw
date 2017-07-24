@@ -58,22 +58,23 @@ process.load("CondCore.CondDB.CondDB_cfi")
 
 
 process.CondDB.connect = "sqlite_file:testcorrLumi.db"
+#process.source = cms.Source("EmptySource")
+
+#process.source = cms.Source("EmptyIOVSource",
+#    timetype = cms.string('lumiid'),
+#    firstValue = cms.uint64(1),
+#    lastValue = cms.uint64(1),
+#    interval = cms.uint64(1)
+#)
+
 process.PoolDBOutputService = cms.Service("PoolDBOutputService",
     process.CondDB,
     toPut = cms.VPSet(
-    cms.PSet(record = cms.string('Corrections'),tag = cms.string('TestLSBasedCorrLumi')),
-    cms.PSet(record = cms.string('Type1Frac'),tag = cms.string('TestLSBasedCorrLumi')),
-    cms.PSet(record = cms.string('Type1Residual'),tag = cms.string('TestLSBasedCorrLumi')),
-    cms.PSet(record = cms.string('Type2Residual'),tag = cms.string('TestLSBasedCorrLumi')),
-    cms.PSet(record = cms.string('OverallCorr'),tag = cms.string('TestLSBasedCorrLumi'))
+    cms.PSet(record = cms.string('MyLumiCorrectionsRcd'),tag = cms.string('TestCorrections'))#,
      ),
     loadBlobStreamer = cms.untracked.bool(False),
     timetype   = cms.untracked.string('lumiid')
-#    timetype   = cms.untracked.string('runnumber')
 )
-
-
-
 
 #
 process.alcaLumi = cms.Sequence(process.corrPCCProd)
