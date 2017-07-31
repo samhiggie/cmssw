@@ -2,7 +2,7 @@
 <use   name="FWCore/Framework"/>
 <use   name="FWCore/ParameterSet"/>
 
-<!--<use   name="CondCore/Utilities"/>--> 
+<use   name="CondCore/Utilities"/>
 <use   name="FWCore/ServiceRegistry"/>
 <use   name="FWCore/PluginManager"/>
 <use name="CondFormats/MyLumiCorrections"/>
@@ -11,6 +11,7 @@
 
 <use   name="Calibration/LumiAlCaRecoProducers"/>
 <use   name="DataFormats/Luminosity"/>
+<use name="CondFormats/DataRecord"/>
 
 <!--<use name="DataFormats/TrackReco"/>
 <use name="CommonTools/UtilAlgos"/>

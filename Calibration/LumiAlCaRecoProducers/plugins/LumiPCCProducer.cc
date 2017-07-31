@@ -28,7 +28,6 @@ ________________________________________________________________**/
 // CMS
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/one/EDProducer.h"
-#include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/EDGetToken.h"
@@ -105,6 +104,13 @@ void LumiPCCProducer::beginLuminosityBlock(edm::LuminosityBlock const& lumiSeg, 
 
 //--------------------------------------------------------------------------------------------------
 void LumiPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, const edm::EventSetup& iSetup){
+   
+ 
+
+}
+
+//--------------------------------------------------------------------------------------------------
+void LumiPCCProducer::endLuminosityBlockProduce(edm::LuminosityBlock& lumiSeg, const edm::EventSetup& iSetup){
     //reset parameters 
     rawlumiBX_.resize(LumiConstants::numBX,0);//new vector containing clusters per bxid 
     correctedLumiBX_.resize(LumiConstants::numBX,0);
@@ -121,26 +127,25 @@ void LumiPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, co
     edm::ESHandle< MyLumiCorrections > corrHandle;//The corrections stored per bunch crossing 
     iSetup.get<MyLumiCorrectionsRcd>().get(corrHandle);
     const MyLumiCorrections *mycorrections = corrHandle.product();
-    std::cout<<"End Luminosity Block"<<std::endl;
-    corrlist_ = mycorrections->m_correctionsBX;
+    corrlist_ = mycorrections->GetCorrectionsBX();
 
-    for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
-        correctedLumiBX_[bx] = rawlumiBX_[bx]*corrlist_[bx];
-        std::cout<<"BX"<<bx<<"The correction "<<corrlist_[bx];
+    std::cout<<"End Luminosity Block"<<std::endl;
+
+    for(unsigned int i=0;i<corrlist_.size();i++){
+        std::cout<<"index "<<i<<" The correction "<<corrlist_[i];
     }
+
+   // for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
+   //     correctedLumiBX_[bx] = rawlumiBX_[bx]*corrlist_[bx];
+   //     std::cout<<"BX"<<bx<<"The correction "<<corrlist_[bx];
+   // }
 
 
     //theLumiOb->setTotalLumi(correctedLumiBX_);
     theLumiOb->setInstLumi(correctedLumiBX_);
  
-    
  
-
-}
-
-//--------------------------------------------------------------------------------------------------
-void LumiPCCProducer::endLuminosityBlockProduce(edm::LuminosityBlock& lumiSeg, const edm::EventSetup& iSetup){
-   lumiSeg.put(std::move(theLumiOb), std::string(trigstring_)); 
+    lumiSeg.put(std::move(theLumiOb), std::string(trigstring_)); 
 
 }
 

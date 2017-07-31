@@ -464,7 +464,7 @@ void CorrPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, co
                 totalLumiByBX_[bx]+=rawlumiBX_[bx];
             }
             thisLSLumiInfo->setInstLumi(totalLumiByBX_);
-            std::cout<<"Total Lumi By BX "<<totalLumiByBX_.at(200)<<std::endl;
+            //std::cout<<"Total Lumi By BX "<<totalLumiByBX_.at(200)<<std::endl;
             break;
         }
     }
@@ -539,15 +539,17 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
         //tp3 = &mean_type2;
         //tp4 = &Overall_corr;
 
-
-        thisIOV = (cond::Time_t)(it->first.first);
+        edm::LuminosityBlockID lu(runSeg.id().run(),edm::LuminosityBlockNumber_t (it->first.first));
+        thisIOV = (cond::Time_t)(lu.value()); 
+        std::cout<<"This IOV "<<thisIOV<<std::endl;
+        //thisIOV = (cond::Time_t)(edm::LuminosityBlockNumber_t (it->first.first));
 
         //Writing the corrections to SQL lite file for db. 
         MyLumiCorrections* pMyLumiCorrections = new MyLumiCorrections();
-        pMyLumiCorrections->m_overallCorrection=Overall_corr;
-        pMyLumiCorrections->m_type1Fraction=type1frac;
-        pMyLumiCorrections->m_type1Residual=mean_type1;
-        pMyLumiCorrections->m_type2Residual=mean_type2;
+        pMyLumiCorrections->SetOverallCorrection(Overall_corr);
+        pMyLumiCorrections->SetType1Fraction(type1frac);
+        pMyLumiCorrections->SetType1Residual(mean_type1);
+        pMyLumiCorrections->SetType2Residual(mean_type2);
         
 
 
@@ -568,7 +570,7 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
         for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
             Double_t value = totalLumiByBX_[bx]*corr_list_[bx];
             myhist[block]->SetBinContent(bx,value);
-            std::cout<<"Bx Number"<<bx<<"Value "<<value<<std::endl;
+            //std::cout<<"Bx Number"<<bx<<"Value "<<value<<std::endl;
         }
         myhist[block]->Write(); 
         type1fracHist->Fill(type1frac);

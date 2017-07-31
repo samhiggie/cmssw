@@ -7,7 +7,7 @@ import FWCore.ParameterSet.Config as cms
 process = cms.Process("LUMI")
 
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/s/shigginb/public/rawPCC_297411_ZB.root')
+    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/s/shigginb/cmssw/CMSSW_9_2_0/src/rawPCC_297411_ZB.root')
 )
 #Added process to select the appropriate events 
 process.OutALCARECOPromptCalibProdPCC = cms.PSet(
@@ -42,11 +42,11 @@ process.lumiPCCProd = cms.EDProducer("LumiPCCProducer",
         ProdInst = cms.string("rawPCZeroBias"),
         resetEveryNLumi = cms.untracked.int32(1),
         trigstring = cms.untracked.string("rawPCCtest"), 
-),
-    toGet = cms.VPSet(cms.PSet( 
-        record = cms.string('MyLumiCorrectionsRcd'),
-        tag = cms.string("TestCorrections")
-    ))
+)# ,
+ #   toGet = cms.VPSet(cms.PSet( 
+ #       record = cms.string('MyLumiCorrectionsRcd'),
+ #       tag = cms.string("TestCorrections")
+ #   ))
 )
 
 #process.get = cms.EDAnalyzer("EventSetupRecordDataGetter",
