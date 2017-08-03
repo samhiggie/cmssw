@@ -1,5 +1,5 @@
-#ifndef MyLumiCorrectionsRcd_MyLumiCorrectionsRcd_h
-#define MyLumiCorrectionsRcd_MyLumiCorrectionsRcd_h
+#ifndef DataRecord_MyLumiCorrectionsRcd_h
+#define DataRecord_MyLumiCorrectionsRcd_h
 // -*- C++ -*-
 //
 // Package:     CondFormats/DataRecord
