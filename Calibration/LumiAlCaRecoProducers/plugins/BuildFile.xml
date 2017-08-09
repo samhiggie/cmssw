@@ -3,20 +3,22 @@
 <use   name="FWCore/ParameterSet"/>
 
 <use   name="CondCore/Utilities"/>
+<use name="CondFormats/DataRecord/interface/MyLumiCorrectionsRcd.h"/>
 <use   name="FWCore/ServiceRegistry"/>
 <use   name="FWCore/PluginManager"/>
 <use name="CondFormats/MyLumiCorrections"/>
 <use name="CoralBase"/>
 <use   name="CondCore/DBOutputService"/>
+<use name="CondCore/ESSources"/>
 
 <use   name="Calibration/LumiAlCaRecoProducers"/>
 <use   name="DataFormats/Luminosity"/>
 <use name="CondFormats/DataRecord"/>
+<flags EDM_PLUGIN="1"/>
 
 <!--<use name="DataFormats/TrackReco"/>
 <use name="CommonTools/UtilAlgos"/>
 <use name="PhysicsTools/UtilAlgos"/>-->
-<flags EDM_PLUGIN="1"/>
 
 
 <library   file="AlcaPCCProducer.cc" name="AlcaPCCProducer">

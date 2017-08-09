@@ -7,7 +7,8 @@ import FWCore.ParameterSet.Config as cms
 process = cms.Process("LUMI")
 
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/s/shigginb/cmssw/CMSSW_9_2_0/src/rawPCC_297411_ZB.root')
+    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/s/shigginb/cmssw/CMSSW_9_2_0/src/rawPCC_297411_ZB.root'),
+    processingMode = cms.untracked.string('RunsAndLumis')
 )
 #Added process to select the appropriate events 
 process.OutALCARECOPromptCalibProdPCC = cms.PSet(

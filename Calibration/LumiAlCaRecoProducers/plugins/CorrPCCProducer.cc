@@ -18,6 +18,9 @@ ________________________________________________________________**/
 #include <string>
 #include <vector>
 #include <boost/serialization/vector.hpp>
+#include <iostream> 
+#include <map>
+#include <utility>
 // CMS
 #include "DataFormats/Luminosity/interface/PixelClusterCounts.h"
 #include "DataFormats/Luminosity/interface/LumiInfo.h"
@@ -25,13 +28,16 @@ ________________________________________________________________**/
 //Test for intellegent lumiblocks
 #include "DataFormats/Luminosity/interface/LumiConstants.h"
 #include "DataFormats/Provenance/interface/LuminosityBlockRange.h"
+#include "DataFormats/Common/interface/Handle.h"
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/Framework/interface/ConsumesCollector.h"
+#include "FWCore/Framework/interface/FileBlock.h"
 
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/Framework/interface/EventSetup.h"
+#include "FWCore/Framework/interface/IOVSyncValue.h"
 // CMS
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/one/EDProducer.h"
@@ -46,8 +52,10 @@ ________________________________________________________________**/
 #include "TH1.h"
 #include "TFile.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
+#include "FWCore/Framework/interface/FileBlock.h"
 #include "CondCore/DBOutputService/interface/PoolDBOutputService.h"
 #include "CondFormats/MyLumiCorrections/interface/MyLumiCorrections.h"
+#include "CondFormats/DataRecord/interface/MyLumiCorrectionsRcd.h"
 #include "CondFormats/Serialization/interface/Serializable.h"
 
 class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one::WatchRuns,edm::EndLuminosityBlockProducer,edm::one::WatchLuminosityBlocks> {
