@@ -8,7 +8,8 @@ process = cms.Process("LUMI")
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/s/shigginb/cmssw/CMSSW_9_2_0/src/rawPCC_297411_ZB.root'),
-    processingMode = cms.untracked.string('RunsAndLumis')
+    processingMode=cms.untracked.string('RunsLumisAndEvents'),
+
 )
 #Added process to select the appropriate events 
 process.OutALCARECOPromptCalibProdPCC = cms.PSet(
@@ -22,16 +23,19 @@ process.OutALCARECOPromptCalibProdPCC = cms.PSet(
 #Trial to see if an SQLite file can be READ locally - will use this for the LumiPCCProducer..
 process.load("CondCore.CondDB.CondDB_cfi")
 #process.GlobalTag.globaltag = '92X_dataRun2_Prompt_v4'
+#process.load("CondCore.DBCommon.CondDBSetup_cfi")
 
-process.CondDB.connect = 'sqlite_file:/afs/cern.ch/work/s/shigginb/cmssw/CMSSW_9_2_0/src/testcorrLumi.db'
+#process.CondDB.connect = 'sqlite_file:/afs/cern.ch/work/s/shigginb/cmssw/CMSSW_9_2_0/src/testcorrLumi.db'
 
 process.PoolDBESSource = cms.ESSource("PoolDBESSource",
-    process.CondDB,
+    #process.CondDB,
+    #process.CondDBSetup,
     DumpStat=cms.untracked.bool(True),
     toGet = cms.VPSet(cms.PSet(
-        record = cms.string('MyLumiCorrectionsRcd'),
+        record = cms.string('LumiCorrectionsRcd'),
         tag = cms.string("TestCorrections")
     )),
+    connect = cms.string('sqlite_file:/afs/cern.ch/work/s/shigginb/cmssw/CMSSW_9_2_0/src/testcorrLumi.db')
 )
 
 
@@ -43,41 +47,25 @@ process.lumiPCCProd = cms.EDProducer("LumiPCCProducer",
         ProdInst = cms.string("rawPCZeroBias"),
         resetEveryNLumi = cms.untracked.int32(1),
         trigstring = cms.untracked.string("rawPCCtest"), 
+        label = cms.untracked.string("/afs/cern.ch/work/s/shigginb/cmssw/CMSSW_9_2_0/src/297411test.csv"), 
 )# ,
  #   toGet = cms.VPSet(cms.PSet( 
- #       record = cms.string('MyLumiCorrectionsRcd'),
+ #       record = cms.string('LumiCorrectionsRcd'),
  #       tag = cms.string("TestCorrections")
  #   ))
 )
 
-#process.get = cms.EDAnalyzer("EventSetupRecordDataGetter",
-#    toGet = cms.VPSet(cms.PSet(
-#        record = cms.string('Corrections'),
-#        data = cms.vstring('TestLSBasedCorrLumi')
-#    )),
-#    verbose = cms.untracked.bool(True)
-#)
+
+
+#process.source = cms.Source("EmptySource",
+#                            processingMode=cms.untracked.string('RunsLumisAndEvents'),
+#                            firstRun = cms.untracked.uint32(297411),
+#                            lastRun = cms.untracked.uint32(297411),
+#                            numberEventsInLuminosityBlock = cms.untracked.uint32(1),
+#                            numberEventsInRun=cms.untracked.uint32(10),
+#                            firstLuminosityBlock = cms.untracked.uint32(1)                           
+#                            )
 #
-# A data source must always be defined. We don't need it, so here's a dummy one.
-#process.source = cms.Source("EmptyIOVSource",
-#    timetype = cms.string('lumiid'),
-#    firstValue = cms.uint64(1),
-#    lastValue = cms.uint64(1),
-#    interval = cms.uint64(1)
-#)
-#
-#process.path = cms.Path(process.get)
-
-
-
-#process.GlobalTag.toGet.append(
-# cms.PSet(
-#   connect = cms.string('sqlite_file:/afs/cern.ch/work/s/shigginb/cmssw/CMSSW_9_1_1_patch1/src/testcorrLumi.db'),
-#   record = cms.string("Corrections"),
-#   tag = cms.string("TestLSBasedCorrLumi")),
-#)
-
-
 
 
 

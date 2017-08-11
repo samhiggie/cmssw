@@ -50,12 +50,14 @@ ________________________________________________________________**/
 #include "FWCore/Framework/interface/Run.h"
 #include "TMath.h"
 #include "TH1.h"
+#include "TGraph.h"
+#include "TGraphErrors.h"
 #include "TFile.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "FWCore/Framework/interface/FileBlock.h"
 #include "CondCore/DBOutputService/interface/PoolDBOutputService.h"
-#include "CondFormats/MyLumiCorrections/interface/MyLumiCorrections.h"
-#include "CondFormats/DataRecord/interface/MyLumiCorrectionsRcd.h"
+#include "CondFormats/LumiCorrections/interface/LumiCorrections.h"
+#include "CondFormats/DataRecord/interface/LumiCorrectionsRcd.h"
 #include "CondFormats/Serialization/interface/Serializable.h"
 
 class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one::WatchRuns,edm::EndLuminosityBlockProducer,edm::one::WatchLuminosityBlocks> {
@@ -111,6 +113,9 @@ class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one
     TH1D *type1fracHist;
     TH1D *type1resHist;
     TH1D *type2resHist;
+    TGraphErrors *type1fracGraph;
+    TGraphErrors *type1resGraph;
+    TGraphErrors *type2resGraph;
     TList *hlist;//list for the clusters and corrections 
 
     float type1frac;
@@ -142,7 +147,7 @@ class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one
     std::unique_ptr<float> T1rUnc;
     std::unique_ptr<float> T2rUnc;
     
-    MyLumiCorrections* pMyLumiCorrections;
+    LumiCorrections* pLumiCorrections;
     
 
 };
@@ -516,6 +521,8 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
     edm::Service<cond::service::PoolDBOutputService> poolDbService;
     cond::Time_t thisIOV = 1;
 
+    //Try adding the TFileservice here...
+    //edm::Service<TFileService> fs; 
 
     char *filename = new char[50];
     sprintf(filename,"Hist_Run_%d.root",runSeg.run());
@@ -528,6 +535,9 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
     type1resHist = new TH1D("Type 1 Residual","Type 1 Residual",4000,-0.2,0.2);
     type2resHist = new TH1D("Type 2 Residual","Type 2 Residual",4000,-0.2,0.2);
 
+    type1fracGraph = new TGraphErrors();
+    type1resGraph = new TGraphErrors();
+    type2resGraph = new TGraphErrors();
     //Setting the data in the run but in a lumisection range
     for(it=myInfoPointers.begin(); (it!=myInfoPointers.end()); ++it) {
 
@@ -541,6 +551,7 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
         //float *tp3;
         //float *tp4;
 
+
         //pointer = &corr_list_;
         //tp1 = &type1frac;
         //tp2 = &mean_type1;
@@ -548,28 +559,23 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
         //tp4 = &Overall_corr;
 
         edm::LuminosityBlockID lu(runSeg.id().run(),edm::LuminosityBlockNumber_t (it->first.first));
+        edm::LuminosityBlockID l2(runSeg.id().run(),edm::LuminosityBlockNumber_t (it->first.second));
         thisIOV = (cond::Time_t)(lu.value()); 
         std::cout<<"This IOV "<<thisIOV<<std::endl;
         //thisIOV = (cond::Time_t)(edm::LuminosityBlockNumber_t (it->first.first));
 
         //Writing the corrections to SQL lite file for db. 
-        MyLumiCorrections* pMyLumiCorrections = new MyLumiCorrections();
-        pMyLumiCorrections->SetOverallCorrection(Overall_corr);
-        pMyLumiCorrections->SetType1Fraction(type1frac);
-        pMyLumiCorrections->SetType1Residual(mean_type1);
-        pMyLumiCorrections->SetType2Residual(mean_type2);
+        LumiCorrections* pLumiCorrections = new LumiCorrections();
+        pLumiCorrections->SetOverallCorrection(Overall_corr);
+        pLumiCorrections->SetType1Fraction(type1frac);
+        pLumiCorrections->SetType1Residual(mean_type1);
+        pLumiCorrections->SetType2Residual(mean_type2);
+        pLumiCorrections->SetCorrectionsBX(corr_list_);
         
 
 
-
-        poolDbService->writeOne<MyLumiCorrections>(pMyLumiCorrections,thisIOV,"MyLumiCorrectionsRcd"); 
-        //poolDbService->writeOne<std::vector<float>>(pointer,thisIOV,"Corrections"); 
-        //poolDbService->writeOne<float>(tp1,thisIOV,"Type1Frac"); 
-        //poolDbService->writeOne<float>(tp2,thisIOV,"Type1Residual"); 
-        //poolDbService->writeOne<float>(tp3,thisIOV,"Type2Residual"); 
-        //poolDbService->writeOne<float>(tp4,thisIOV,"OverallCorr"); 
-
-         
+        poolDbService->writeOne<LumiCorrections>(pLumiCorrections,thisIOV,"LumiCorrectionsRcd"); 
+                 
         //histos
         int block = (it->first.first-1)*nBlocks/totalLS;  //iBlock*totalLS/nBlocks+1
         sprintf(histname, "CorrectedLumi_%d_%d_%d",block,it->first.first,it->first.second);
@@ -584,6 +590,15 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
         type1fracHist->Fill(type1frac);
         type1resHist->Fill(mean_type1);
         type2resHist->Fill(mean_type2);
+    
+        cond::Time_t timeErr = (cond::Time_t)l2.value() - (cond::Time_t)lu.value(); 
+        type1fracGraph->SetPoint(block,thisIOV,type1frac);
+        type1resGraph->SetPoint(block,thisIOV,mean_type1);
+        type2resGraph->SetPoint(block,thisIOV,mean_type2);
+        type1fracGraph->SetPointError(block,timeErr, type1fracHist->GetStdDev());
+        type1resGraph->SetPointError(block,timeErr,type1resHist->GetStdDev());
+        type2resGraph->SetPointError(block,timeErr,type2resHist->GetStdDev());
+        
 
         //reset just in case
         type1frac=0.0;
@@ -592,13 +607,39 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
         
     }
      
+     type1fracGraph->SetName("Type 1 Fraction");
+     type1resGraph->SetName("Type 1 Residual");
+     type2resGraph->SetName("Type 2 Residual");
+ 
+     type1fracGraph->SetMarkerStyle(8);
+     type1resGraph->SetMarkerStyle(8);
+     type2resGraph->SetMarkerStyle(8);
+
+     type1fracGraph->GetYaxis()->SetTitle("Type 1 Fraction");
+     type1resGraph->GetYaxis()->SetTitle("Type 1 Residual");
+     type2resGraph->GetYaxis()->SetTitle("Type 2 Residual");
+
+     type1fracGraph->GetXaxis()->SetTitle("Time");
+     type1resGraph->GetXaxis()->SetTitle("Time");
+     type2resGraph->GetXaxis()->SetTitle("Time");
+ 
+     type1fracGraph->Draw("ap");
+     type1resGraph->Draw("ap");
+     type2resGraph->Draw("ap");
+
+     type1fracGraph->Write();
+     type1resGraph->Write();
+     type2resGraph->Write();
+
      type1fracHist->Write();
      type1resHist->Write();
      type2resHist->Write();
      outf->Write();
+
     //reset! 
     myInfoPointers.clear();
 
+    
 
  
 

@@ -71,7 +71,7 @@ process.CondDB.connect = "sqlite_file:testcorrLumi.db"
 process.PoolDBOutputService = cms.Service("PoolDBOutputService",
     process.CondDB,
     toPut = cms.VPSet(
-    cms.PSet(record = cms.string('MyLumiCorrectionsRcd'),tag = cms.string('TestCorrections'))#,
+    cms.PSet(record = cms.string('LumiCorrectionsRcd'),tag = cms.string('TestCorrections'))#,
      ),
     loadBlobStreamer = cms.untracked.bool(False),
     timetype   = cms.untracked.string('lumiid')

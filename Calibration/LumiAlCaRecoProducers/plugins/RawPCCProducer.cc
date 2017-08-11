@@ -168,7 +168,11 @@ void RawPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, con
     std::cout<<"Print end Lumi Block"<<std::endl;
     for (unsigned int i=0;i<clusterPerBX_.size();i++){
         if (events_.at(i)!=0){
-            rawlumiBX_.at(i)=clusterPerBX_.at(i)/float(events_.at(i));
+            //rawlumiBX_.at(i)=clusterPerBX_.at(i)/float(events_.at(i));
+            rawlumiBX_.at(i)=clusterPerBX_.at(i);
+        }
+        else{
+            rawlumiBX_.at(i)=0.0;//Set the lumi to 0 if there is no events...
         }
         //std::cout<<"raw lumi "<<rawlumiBX_.at(i);
         totalLumi_+=rawlumiBX_.at(i);        
@@ -180,9 +184,12 @@ void RawPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, con
 
     theLumiOb->setTotalLumi(totalLumi_);
     theLumiOb->setStatErrorOnLumi(statErrOnLumi_);
-    std::cout<<"The total Luminosity "<<theLumiOb->totalrawLuminosity()<<std::endl;
+    //std::cout<<"The total Luminosity "<<theLumiOb->totalrawLuminosity()<<std::endl;
     //theLumiOb->fillInstLumi(constantRawLumi);
-    theLumiOb->setErrLumiBX(errOnLumiByBX_);
+
+    //Note! Setting the error on the lumi per bx as the number of events... we can compute the true luminosity and stats later... using as place holders for time being. 
+    std::vector<float> events(events_.begin(), events_.end());
+    theLumiOb->setErrLumiBX(events);
     theLumiOb->setInstLumi(rawlumiBX_);
  
     
