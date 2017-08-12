@@ -47,7 +47,7 @@ process.lumiPCCProd = cms.EDProducer("LumiPCCProducer",
         ProdInst = cms.string("rawPCZeroBias"),
         resetEveryNLumi = cms.untracked.int32(1),
         trigstring = cms.untracked.string("rawPCCtest"), 
-        label = cms.untracked.string("/afs/cern.ch/work/s/shigginb/cmssw/CMSSW_9_2_0/src/297411test.csv"), 
+        label = cms.string("/afs/cern.ch/work/s/shigginb/cmssw/CMSSW_9_2_0/src/297411test.csv"), 
 )# ,
  #   toGet = cms.VPSet(cms.PSet( 
  #       record = cms.string('LumiCorrectionsRcd'),

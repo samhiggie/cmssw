@@ -82,7 +82,7 @@ LumiPCCProducer::LumiPCCProducer(const edm::ParameterSet& iConfig)
     PCCsrc_ = iConfig.getParameter<edm::ParameterSet>("LumiPCCProducerParameters").getParameter<std::string>("PCCobLabel");
     ProdInst_ = iConfig.getParameter<edm::ParameterSet>("LumiPCCProducerParameters").getParameter<std::string>("ProdInst");
     trigstring_ = iConfig.getParameter<edm::ParameterSet>("LumiPCCProducerParameters").getUntrackedParameter<std::string>("trigstring","alcaLumi");
-    label_ = iConfig.getParameter<edm::ParameterSet>("LumiPCCProducerParameters").getUntrackedParameter<std::string>("label");
+    label_ = iConfig.getParameter<edm::ParameterSet>("LumiPCCProducerParameters").getParameter<std::string>("label");
     //Initialization of Params in rawPCC
 
     edm::InputTag LumiInputTag_(PCCsrc_, ProdInst_);
@@ -92,12 +92,10 @@ LumiPCCProducer::LumiPCCProducer(const edm::ParameterSet& iConfig)
     totalLumi = 0.0;
 
     std::ofstream csvfile;//
-    csvfile.open(label_);
 }
 
 //--------------------------------------------------------------------------------------------------
 LumiPCCProducer::~LumiPCCProducer(){
-    csvfile.close();
 }
 //--------------------------------------------------------------------------------------------------
 void LumiPCCProducer::beginRun(edm::Run const& runSeg, const edm::EventSetup& iSetup){
@@ -119,14 +117,14 @@ void LumiPCCProducer::beginLuminosityBlock(edm::LuminosityBlock const& lumiSeg, 
     std::cout<<"Begin Lumi-Block"<<std::endl;
     theLumiOb = std::make_unique<LumiInfo>(); 
     //LumiInfo theLumiOb; 
-    csvfile<<lumiSeg.luminosityBlock()<<",";
+
+    csvfile.open(label_, std::ios_base::app);
+    if (csvfile.is_open()) { std::cout<<"My File is open!!"<<std::endl;}
+    csvfile<<std::to_string(lumiSeg.luminosityBlock())<<",";
 }
 
 //--------------------------------------------------------------------------------------------------
 void LumiPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, const edm::EventSetup& iSetup){
-   
- 
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -160,15 +158,17 @@ void LumiPCCProducer::endLuminosityBlockProduce(edm::LuminosityBlock& lumiSeg, c
     //theLumiOb->setTotalLumi(correctedLumiBX_);
     theLumiOb->setInstLumi(correctedLumiBX_);
  
-    csvfile<<totalLumi;
+    csvfile<<std::to_string(totalLumi);
 
     for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
-       csvfile<<","<<correctedLumiBX_[bx];
+       csvfile<<","<<std::to_string(correctedLumiBX_[bx]);
     }
     csvfile<<std::endl;   
     lumiSeg.put(std::move(theLumiOb), std::string(trigstring_)); 
     totalLumi = 0.0;
-
+    
+    std::cout<<"writing the file"<<std::endl;
+    csvfile.close();
 }
 //--------------------------------------------------------------------------------------------------
 void LumiPCCProducer::endRun(edm::Run const& runSeg, const edm::EventSetup& iSetup){
