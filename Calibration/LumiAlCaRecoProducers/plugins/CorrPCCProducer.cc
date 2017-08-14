@@ -93,8 +93,11 @@ class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one
     std::vector<float> rawlumiBX_;//new vector containing clusters per bxid 
     std::vector<float> errOnLumiByBX_;//standard error per bx
     std::vector<float> totalLumiByBX_;//summed lumi
+    std::vector<float> totalLumiByBXAvg_;//summed lumi
+    std::vector<float> events_;//Number of events in each BX
     std::vector<float> correctionTemplate_;
     std::vector<float> corr_list_;//list of scale factors to apply.
+    std::vector<float> corr_list2_;//list of scale factors to apply.
     float Overall_corr;//The Overall correction to the integrated luminosity
 
     int totalLS=3000;//Max number of Lumisections in a run! Change this later to something more robust
@@ -109,7 +112,12 @@ class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one
     //Why not some histos at this point?!
     TH1D  *clustersBxHist;
     TH1D  *corrLumiHist;
-    TH1F *myhist;
+    TH1F *corrlumiAvg_h;
+    TH1F *scaleFactorAvg_h;
+    TH1F *lumiAvg_h;
+    TH1F *corrlumi_h; 
+    TH1F *scaleFactor_h; 
+    TH1F *lumi_h; 
     TH1D *type1fracHist;
     TH1D *type1resHist;
     TH1D *type2resHist;
@@ -170,22 +178,11 @@ CorrPCCProducer::CorrPCCProducer(const edm::ParameterSet& iConfig)
 
     for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
         totalLumiByBX_.push_back(0);
-    }
-  
-    //Initialization of Temparory Corrected PCC
-     
-    //for (size_t bx=0; bx<LumiConstants::numBX; bx++){
-    //    corrected_tmp_.push_back(0);    
-   
-    //} 
-    //Generate a pseudo correction list:Add function to created list here?
-    for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
+        totalLumiByBXAvg_.push_back(0);
+        events_.push_back(0);
         corr_list_.push_back(1.0);
-    }
-   
-    for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
+        corr_list_.push_back(1.0);
         correctionTemplate_.push_back(1.0);
-    
     }
 
     //Making the template for the corrections 
@@ -413,8 +410,12 @@ void CorrPCCProducer::CalculateCorrections (std::vector<float> uncorrected, std:
        }
        if(corrected_tmp_.at(ibx)!=0.0&&uncorrected.at(ibx)!=0.0){ 
        corr_list_.at(ibx) = corrected_tmp_.at(ibx)/uncorrected.at(ibx);
+       corr_list_.at(ibx) = corrected_tmp_.at(ibx)/uncorrected.at(ibx);
        }
-       else{corr_list_.at(ibx) = 0.0;}
+       else{
+       corr_list_.at(ibx) = 0.0;
+       corr_list_.at(ibx) = 0.0;
+       }
    }
  
    Overall_corr = Integral_Corr/Integral_Uncorr;  
@@ -528,8 +529,18 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
     sprintf(filename,"Hist_Run_%d.root",runSeg.run());
     TFile * outf = new TFile(filename, "RECREATE");
     outf->cd();
-    TH1F *myhist[int(nBlocks)+1];
-    char *histname = new char[50];
+    TH1F *corrlumiAvg_h[int(nBlocks)+1];
+    TH1F *scaleFactorAvg_h[int(nBlocks)+1];
+    TH1F *lumiAvg_h[int(nBlocks)+1];
+    TH1F *corrlumi_h[int(nBlocks)+1]; 
+    TH1F *scaleFactor_h[int(nBlocks)+1]; 
+    TH1F *lumi_h[int(nBlocks)+1]; 
+    char *histname = new char[100];
+    char *histname2 = new char[100];
+    char *histname3 = new char[100];
+    char *histname4 = new char[100];
+    char *histname5 = new char[100];
+    char *histname6 = new char[100];
 
     type1fracHist = new TH1D("Type 1 Fraction","Type 1 Fraction",1000,-0.5,0.5);
     type1resHist = new TH1D("Type 1 Residual","Type 1 Residual",4000,-0.2,0.2);
@@ -542,27 +553,27 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
     for(it=myInfoPointers.begin(); (it!=myInfoPointers.end()); ++it) {
 
         totalLumiByBX_=it->second->getInstLumiAllBX();
+        //Stat error is number of events
+        events_=it->second->getErrorLumiAllBX();
 
         CalculateCorrections(totalLumiByBX_,corr_list_, Overall_corr); 
 
-        //std::vector<float> *pointer;
-        //float *tp1;
-        //float *tp2;
-        //float *tp3;
-        //float *tp4;
-
-
-        //pointer = &corr_list_;
-        //tp1 = &type1frac;
-        //tp2 = &mean_type1;
-        //tp3 = &mean_type2;
-        //tp4 = &Overall_corr;
+        //Do the division by number of events ("take the average here)"
+        for(unsigned int i=0;i<totalLumiByBX_.size();i++){
+        if(events_.at(i)!=0){
+            totalLumiByBXAvg_.at(i) =  totalLumiByBX_.at(i)/events_.at(i);
+        }
+        else{
+            totalLumiByBXAvg_.at(i)=0.0;
+        }
+   
+        }
+        //Normalized, take avg. PCC rather than total
+        CalculateCorrections(totalLumiByBXAvg_,corr_list2_, Overall_corr); 
 
         edm::LuminosityBlockID lu(runSeg.id().run(),edm::LuminosityBlockNumber_t (it->first.first));
-        edm::LuminosityBlockID l2(runSeg.id().run(),edm::LuminosityBlockNumber_t (it->first.second));
         thisIOV = (cond::Time_t)(lu.value()); 
         std::cout<<"This IOV "<<thisIOV<<std::endl;
-        //thisIOV = (cond::Time_t)(edm::LuminosityBlockNumber_t (it->first.first));
 
         //Writing the corrections to SQL lite file for db. 
         LumiCorrections* pLumiCorrections = new LumiCorrections();
@@ -578,26 +589,65 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
                  
         //histos
         int block = (it->first.first-1)*nBlocks/totalLS;  //iBlock*totalLS/nBlocks+1
-        sprintf(histname, "CorrectedLumi_%d_%d_%d",block,it->first.first,it->first.second);
+        sprintf(histname, "CorrectedLumiAvg_%d_%d_%d",block,it->first.first,it->first.second);
+        sprintf(histname2, "ScaleFactorsAvg_%d_%d_%d",block,it->first.first,it->first.second);
+        sprintf(histname3, "RawLumiAvg_%d_%d_%d",block,it->first.first,it->first.second);
+        sprintf(histname4, "CorrectedLumi_%d_%d_%d",block,it->first.first,it->first.second);
+        sprintf(histname5, "ScaleFactors_%d_%d_%d",block,it->first.first,it->first.second);
+        sprintf(histname6, "RawLumi_%d_%d_%d",block,it->first.first,it->first.second);
+
         std::cout<<"Histogram Name "<<histname<<std::endl;
-        myhist[block]=new TH1F(histname,"",LumiConstants::numBX,1,LumiConstants::numBX);
+        corrlumiAvg_h[block]=new TH1F(histname,"",LumiConstants::numBX,1,LumiConstants::numBX);
+        scaleFactorAvg_h[block]=new TH1F(histname2,"",LumiConstants::numBX,1,LumiConstants::numBX);
+        lumiAvg_h[block]=new TH1F(histname3,"",LumiConstants::numBX,1,LumiConstants::numBX); 
+        corrlumi_h[block]=new TH1F(histname4,"",LumiConstants::numBX,1,LumiConstants::numBX); 
+        scaleFactor_h[block]=new TH1F(histname5,"",LumiConstants::numBX,1,LumiConstants::numBX); 
+        lumi_h[block]=new TH1F(histname6,"",LumiConstants::numBX,1,LumiConstants::numBX); 
+
         for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
-            Double_t value = totalLumiByBX_[bx]*corr_list_[bx];
-            myhist[block]->SetBinContent(bx,value);
-            //std::cout<<"Bx Number"<<bx<<"Value "<<value<<std::endl;
+
+            corrlumiAvg_h[block]->SetBinContent(bx,totalLumiByBXAvg_[bx]*corr_list2_[bx]);
+            if(events_.at(bx)!=0){
+            corrlumiAvg_h[block]->SetBinError(bx,totalLumiByBXAvg_[bx]*corr_list2_[bx]/TMath::Sqrt(events_.at(bx)));
+            }
+            else{
+            corrlumiAvg_h[block]->SetBinError(bx,0.0);
+            }
+
+            scaleFactorAvg_h[block]->SetBinContent(bx,corr_list2_[bx]);
+            lumiAvg_h[block]->SetBinContent(bx,totalLumiByBXAvg_[bx]);
+            
+
+            corrlumi_h[block]->SetBinContent(bx,totalLumiByBX_[bx]*corr_list_[bx]);
+            if(events_.at(bx)!=0){
+            corrlumi_h[block]->SetBinError(bx,totalLumiByBX_[bx]*corr_list_[bx]/TMath::Sqrt(events_[bx]));
+            }
+            else{
+            corrlumi_h[block]->SetBinError(bx,0.0);
+            }
+
+            scaleFactor_h[block]->SetBinContent(bx,corr_list_[bx]);
+            lumi_h[block]->SetBinContent(bx,totalLumiByBX_.at(bx));
         }
-        myhist[block]->Write(); 
+        //Array of histograms 
+        corrlumiAvg_h[block]->Write(); 
+        scaleFactorAvg_h[block]->Write(); 
+        lumiAvg_h[block]->Write(); 
+        
+        corrlumi_h[block]->Write(); 
+        scaleFactor_h[block]->Write(); 
+        lumi_h[block]->Write(); 
+     
         type1fracHist->Fill(type1frac);
         type1resHist->Fill(mean_type1);
         type2resHist->Fill(mean_type2);
     
-        cond::Time_t timeErr = (cond::Time_t)l2.value() - (cond::Time_t)lu.value(); 
-        type1fracGraph->SetPoint(block,thisIOV,type1frac);
-        type1resGraph->SetPoint(block,thisIOV,mean_type1);
-        type2resGraph->SetPoint(block,thisIOV,mean_type2);
-        type1fracGraph->SetPointError(block,timeErr, type1fracHist->GetStdDev());
-        type1resGraph->SetPointError(block,timeErr,type1resHist->GetStdDev());
-        type2resGraph->SetPointError(block,timeErr,type2resHist->GetStdDev());
+        type1fracGraph->SetPoint(block,thisIOV+resetNLumi_/2.0,type1frac);
+        type1resGraph->SetPoint(block,thisIOV+resetNLumi_/2.0,mean_type1);
+        type2resGraph->SetPoint(block,thisIOV+resetNLumi_/2.0,mean_type2);
+        type1fracGraph->SetPointError(block,resetNLumi_/2.0, type1fracHist->GetStdDev());
+        type1resGraph->SetPointError(block,resetNLumi_/2.0,type1resHist->GetStdDev());
+        type2resGraph->SetPointError(block,resetNLumi_/2.0,type2resHist->GetStdDev());
         
 
         //reset just in case

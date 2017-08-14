@@ -73,6 +73,7 @@ public:
   // Inst lumi by bunch
   float getInstLumiBX(int bx) const { return instLumiByBX_.at(bx); }
   const std::vector<float>& getInstLumiAllBX() const { return instLumiByBX_; }
+  const std::vector<float>& getErrorLumiAllBX() const { return errLumiByBX_; }
 
   bool isProductEqual(LumiInfo const& next) const;
 

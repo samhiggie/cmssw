@@ -100,7 +100,6 @@ LumiPCCProducer::~LumiPCCProducer(){
 //--------------------------------------------------------------------------------------------------
 void LumiPCCProducer::beginRun(edm::Run const& runSeg, const edm::EventSetup& iSetup){
     std::cout<<"Begin Run"<<std::endl;
-    csvfile<<std::to_string(runSeg.run())<<",";
     //LumiInfo outLumiOb; 
 }
 //--------------------------------------------------------------------------------------------------
@@ -120,6 +119,7 @@ void LumiPCCProducer::beginLuminosityBlock(edm::LuminosityBlock const& lumiSeg, 
 
     csvfile.open(label_, std::ios_base::app);
     if (csvfile.is_open()) { std::cout<<"My File is open!!"<<std::endl;}
+    csvfile<<std::to_string(lumiSeg.run())<<",";
     csvfile<<std::to_string(lumiSeg.luminosityBlock())<<",";
 }
 
