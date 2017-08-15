@@ -181,7 +181,7 @@ CorrPCCProducer::CorrPCCProducer(const edm::ParameterSet& iConfig)
         totalLumiByBXAvg_.push_back(0);
         events_.push_back(0);
         corr_list_.push_back(1.0);
-        corr_list_.push_back(1.0);
+        corr_list2_.push_back(1.0);
         correctionTemplate_.push_back(1.0);
     }
 
@@ -410,11 +410,11 @@ void CorrPCCProducer::CalculateCorrections (std::vector<float> uncorrected, std:
        }
        if(corrected_tmp_.at(ibx)!=0.0&&uncorrected.at(ibx)!=0.0){ 
        corr_list_.at(ibx) = corrected_tmp_.at(ibx)/uncorrected.at(ibx);
-       corr_list_.at(ibx) = corrected_tmp_.at(ibx)/uncorrected.at(ibx);
+       corr_list2_.at(ibx) = corrected_tmp_.at(ibx)/uncorrected.at(ibx);
        }
        else{
        corr_list_.at(ibx) = 0.0;
-       corr_list_.at(ibx) = 0.0;
+       corr_list2_.at(ibx) = 0.0;
        }
    }
  
@@ -554,23 +554,16 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
 
         totalLumiByBX_=it->second->getInstLumiAllBX();
         //Stat error is number of events
+        std::cout<<"Obtaining Events"<<std::endl;
         events_=it->second->getErrorLumiAllBX();
+        std::cout<<"Size of events "<<events_.size()<<std::endl;
+        //for(unsigned int j=0;j<LumiConstants::numBX;j++){
+        //std::cout<<"Index "<<j<<"Events "<<events_.at(j);
+        //}
 
         CalculateCorrections(totalLumiByBX_,corr_list_, Overall_corr); 
 
-        //Do the division by number of events ("take the average here)"
-        for(unsigned int i=0;i<totalLumiByBX_.size();i++){
-        if(events_.at(i)!=0){
-            totalLumiByBXAvg_.at(i) =  totalLumiByBX_.at(i)/events_.at(i);
-        }
-        else{
-            totalLumiByBXAvg_.at(i)=0.0;
-        }
-   
-        }
-        //Normalized, take avg. PCC rather than total
-        CalculateCorrections(totalLumiByBXAvg_,corr_list2_, Overall_corr); 
-
+        
         edm::LuminosityBlockID lu(runSeg.id().run(),edm::LuminosityBlockNumber_t (it->first.first));
         thisIOV = (cond::Time_t)(lu.value()); 
         std::cout<<"This IOV "<<thisIOV<<std::endl;
@@ -604,6 +597,38 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
         scaleFactor_h[block]=new TH1F(histname5,"",LumiConstants::numBX,1,LumiConstants::numBX); 
         lumi_h[block]=new TH1F(histname6,"",LumiConstants::numBX,1,LumiConstants::numBX); 
 
+        std::cout<<"Initialized Histograms"<<std::endl;
+        for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
+            corrlumi_h[block]->SetBinContent(bx,totalLumiByBX_[bx]*corr_list_[bx]);
+            if(events_.at(bx)!=0){
+            corrlumi_h[block]->SetBinError(bx,totalLumiByBX_[bx]*corr_list_[bx]/TMath::Sqrt(events_[bx]));
+            }
+            else{
+            corrlumi_h[block]->SetBinError(bx,0.0);
+            }
+
+            std::cout<<"Filling Histograms"<<std::endl;
+            scaleFactor_h[block]->SetBinContent(bx,corr_list_[bx]);
+            lumi_h[block]->SetBinContent(bx,totalLumiByBX_.at(bx));
+        }
+
+        //Do the division by number of events ("take the average here)"
+        std::cout<<"Averaging"<<std::endl;
+        for(unsigned int i=0;i<LumiConstants::numBX;i++){
+        if(events_.at(i)!=0){
+            totalLumiByBXAvg_.at(i) =  totalLumiByBX_.at(i)/events_.at(i);
+        }
+        else{
+            totalLumiByBXAvg_.at(i)=0.0;
+        }
+   
+        }
+
+       
+        //Normalized, take avg. PCC rather than total
+        CalculateCorrections(totalLumiByBXAvg_,corr_list2_, Overall_corr); 
+
+
         for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
 
             corrlumiAvg_h[block]->SetBinContent(bx,totalLumiByBXAvg_[bx]*corr_list2_[bx]);
@@ -618,17 +643,10 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
             lumiAvg_h[block]->SetBinContent(bx,totalLumiByBXAvg_[bx]);
             
 
-            corrlumi_h[block]->SetBinContent(bx,totalLumiByBX_[bx]*corr_list_[bx]);
-            if(events_.at(bx)!=0){
-            corrlumi_h[block]->SetBinError(bx,totalLumiByBX_[bx]*corr_list_[bx]/TMath::Sqrt(events_[bx]));
-            }
-            else{
-            corrlumi_h[block]->SetBinError(bx,0.0);
-            }
 
-            scaleFactor_h[block]->SetBinContent(bx,corr_list_[bx]);
-            lumi_h[block]->SetBinContent(bx,totalLumiByBX_.at(bx));
         }
+
+
         //Array of histograms 
         corrlumiAvg_h[block]->Write(); 
         scaleFactorAvg_h[block]->Write(); 

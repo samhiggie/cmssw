@@ -52,9 +52,15 @@ process.out = cms.OutputModule("PoolOutputModule",
 
 
 #
-process.alcalumi = cms.Path(process.rawPCCProd + process.corrPCCProd)
+#process.alcalumi = cms.Path(process.rawPCCProd)
+#process.alcalumi2 = cms.Path(process.corrPCCProd)
+#seqRaw = cms.Sequence(process.rawPCCProd)
+#seqCor=cms.Sequence(process.corrPCCProd)
+process.path1 = cms.Path(process.rawPCCProd)
+process.path2 = cms.Path(process.corrPCCProd)
+process.schedule = cms.Schedule(process.path1, process.path2)
 
-
+#
 process.MessageLogger = cms.Service("MessageLogger",
     FrameworkJobReport = cms.untracked.PSet(
         FwkJob = cms.untracked.PSet(
