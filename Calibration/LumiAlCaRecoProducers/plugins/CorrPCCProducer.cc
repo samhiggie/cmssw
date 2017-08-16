@@ -464,6 +464,7 @@ void CorrPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, co
 
     //Making the vectors to loop over the lumisections for each run    
     rawlumiBX_= inLumiOb.getInstLumiAllBX();
+    errOnLumiByBX_= inLumiOb.getErrorLumiAllBX();
 
         
     LumiInfo* thisLSLumiInfo; //lumioutput object but will be used with map and saved to Run
@@ -476,8 +477,10 @@ void CorrPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, co
             //summing over lumisections
             for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
                 totalLumiByBX_[bx]+=rawlumiBX_[bx];
+                events_[bx]+=errOnLumiByBX_[bx];
             }
             thisLSLumiInfo->setInstLumi(totalLumiByBX_);
+            thisLSLumiInfo->setErrLumiBX(events_);
             //std::cout<<"Total Lumi By BX "<<totalLumiByBX_.at(200)<<std::endl;
             break;
         }
@@ -495,6 +498,7 @@ void CorrPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, co
         thisLSLumiInfo = myInfoPointers[lsKey];
         for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
                 totalLumiByBX_[bx]=0.0;
+                events_[bx]=0.0;
         }
     }
 }
