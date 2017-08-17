@@ -423,19 +423,14 @@ void CorrPCCProducer::CalculateCorrections (std::vector<float> uncorrected, std:
 
 //--------------------------------------------------------------------------------------------------
 void CorrPCCProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
-    //std::cout<<"A Print Statement"<<std::endl;
-
       
 }
 //--------------------------------------------------------------------------------------------------
 void CorrPCCProducer::beginRun(edm::Run const& runSeg, const edm::EventSetup& iSetup){
-    std::cout<<"Begin Run"<<std::endl;
-    //LumiInfo outLumiOb; 
 }
 
 //--------------------------------------------------------------------------------------------------
 void CorrPCCProducer::beginLuminosityBlock(edm::LuminosityBlock const& lumiSeg, const edm::EventSetup& iSetup){
-    std::cout<<"Begin Lumi-Block"<<std::endl;
     countLumi_++;
 
     //beginning of lumiblock
@@ -462,7 +457,6 @@ void CorrPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, co
     bool found=false;//Going to match iovs to lumiInfo objects
 
 
-    //Making the vectors to loop over the lumisections for each run    
     rawlumiBX_= inLumiOb.getInstLumiAllBX();
     errOnLumiByBX_= inLumiOb.getErrorLumiAllBX();
 
@@ -474,24 +468,18 @@ void CorrPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, co
         if( (thisLS >= it->first.first) && (thisLS<= it->first.second) ){
             thisLSLumiInfo = it->second;
             found=true;
-            //summing over lumisections
             for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
                 totalLumiByBX_[bx]+=rawlumiBX_[bx];
                 events_[bx]+=errOnLumiByBX_[bx];
             }
             thisLSLumiInfo->setInstLumi(totalLumiByBX_);
             thisLSLumiInfo->setErrLumiBX(events_);
-            //std::cout<<"Total Lumi By BX "<<totalLumiByBX_.at(200)<<std::endl;
             break;
         }
     }
 
     if(!found) {
-        //insert new pair
         std::pair<int,int> lsKey;
-        //find appropriate window
-        // this is a function of the nLS block length and thisLS
-        // e.g. if thisLS=56 and nLS=50, then lsKey=(51,100)
         lsKey=std::make_pair(thisLS - thisLS%resetNLumi_+1,thisLS - thisLS%resetNLumi_+resetNLumi_);
         std::cout<<"Found a new range and object "<<lsKey.first<<":"<<lsKey.second<<std::endl;
         myInfoPointers[lsKey]= new LumiInfo();
@@ -505,8 +493,6 @@ void CorrPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, co
 
 //--------------------------------------------------------------------------------------------------
 void CorrPCCProducer::endRun(edm::Run const& runSeg, const edm::EventSetup& iSetup){
-    //std::cout<<"End Run"<<std::endl;
-    //std::cout<<"The end time of the run: "<<std::to_string(runSeg.endTime())<<std::endl;
  
 }
 
@@ -518,7 +504,6 @@ void CorrPCCProducer::endLuminosityBlockProduce(edm::LuminosityBlock& lumiSeg, c
 
 //--------------------------------------------------------------------------------------------------
 void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSetup){
-    std::cout<<"End Run"<<std::endl;
     //Setting the corrections
     outLumiOb = std::make_unique<LumiInfo>(); 
 
@@ -553,17 +538,13 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
     type1fracGraph = new TGraphErrors();
     type1resGraph = new TGraphErrors();
     type2resGraph = new TGraphErrors();
+
     //Setting the data in the run but in a lumisection range
     for(it=myInfoPointers.begin(); (it!=myInfoPointers.end()); ++it) {
 
         totalLumiByBX_=it->second->getInstLumiAllBX();
         //Stat error is number of events
-        std::cout<<"Obtaining Events"<<std::endl;
         events_=it->second->getErrorLumiAllBX();
-        std::cout<<"Size of events "<<events_.size()<<std::endl;
-        //for(unsigned int j=0;j<LumiConstants::numBX;j++){
-        //std::cout<<"Index "<<j<<"Events "<<events_.at(j);
-        //}
 
         CalculateCorrections(totalLumiByBX_,corr_list_, Overall_corr); 
 
@@ -610,14 +591,11 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
             else{
             corrlumi_h[block]->SetBinError(bx,0.0);
             }
-
-            std::cout<<"Filling Histograms"<<std::endl;
             scaleFactor_h[block]->SetBinContent(bx,corr_list_[bx]);
             lumi_h[block]->SetBinContent(bx,totalLumiByBX_.at(bx));
         }
 
         //Do the division by number of events ("take the average here)"
-        std::cout<<"Averaging"<<std::endl;
         for(unsigned int i=0;i<LumiConstants::numBX;i++){
         if(events_.at(i)!=0){
             totalLumiByBXAvg_.at(i) =  totalLumiByBX_.at(i)/events_.at(i);
