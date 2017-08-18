@@ -34,7 +34,7 @@ process.corrPCCProd = cms.EDProducer("CorrPCCProducer",
         #Mod factor to count lumi and the string to specify output 
         inLumiObLabel = cms.string("rawPCCProd"),
         ProdInst = cms.string("rawPCRandom"),
-        resetEveryNLumi=cms.int32(3),
+        resetEveryNLumi=cms.int32(50),
         trigstring = cms.untracked.string("corrPCCRand"), 
         type2_a= cms.double(0.00072),
         type2_b= cms.double(0.014),
@@ -42,6 +42,29 @@ process.corrPCCProd = cms.EDProducer("CorrPCCProducer",
 )
 
 
+#Output for the Database
+process.load("CondCore.CondDB.CondDB_cfi")
+#process.load("CondCore.DBCommon.CondDBCommon_cfi")
+
+
+process.CondDB.connect = "sqlite_file:testcorrLumiCombined.db"
+#process.source = cms.Source("EmptySource")
+
+#process.source = cms.Source("EmptyIOVSource",
+#    timetype = cms.string('lumiid'),
+#    firstValue = cms.uint64(1),
+#    lastValue = cms.uint64(1),
+#    interval = cms.uint64(1)
+#)
+
+process.PoolDBOutputService = cms.Service("PoolDBOutputService",
+    process.CondDB,
+    toPut = cms.VPSet(
+    cms.PSet(record = cms.string('LumiCorrectionsRcd'),tag = cms.string('TestCorrections'))#,
+     ),
+    loadBlobStreamer = cms.untracked.bool(False),
+    timetype   = cms.untracked.string('lumiid')
+)
 #From the end path, this is where we specify format for our output.
 process.out = cms.OutputModule("PoolOutputModule",
     fileName = cms.untracked.string('raw_corr_PCC_297411_RD.root'),
