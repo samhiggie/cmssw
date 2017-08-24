@@ -8,7 +8,6 @@ process = cms.Process("corrRECO")
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-    #'file:/eos/cms/store/data/Run2017B/AlCaLumiPixels/ALCARECO/AlCaPCCRandom-PromptReco-v1/000/297/227/00000/B60A43B6-C258-E711-9352-02163E019CCE.root'
     'file:/eos/cms/store/data/Run2017B/AlCaLumiPixels/ALCARECO/AlCaPCCRandom-PromptReco-v1/000/297/411/00000/0AC6C13D-F259-E711-AB3A-02163E019E8E.root',
     'file:/eos/cms/store/data/Run2017B/AlCaLumiPixels/ALCARECO/AlCaPCCRandom-PromptReco-v1/000/297/411/00000/1E2F6E5E-0C5A-E711-88B4-02163E01A420.root',
     'file:/eos/cms/store/data/Run2017B/AlCaLumiPixels/ALCARECO/AlCaPCCRandom-PromptReco-v1/000/297/411/00000/E2BA90F8-F559-E711-8805-02163E01A3BB.root',
@@ -23,7 +22,7 @@ process.rawPCCProd = cms.EDProducer("RawPCCProducer",
         PCCobLabel = cms.string("alcaPCCProducerRandom"),
         ProdInst = cms.string("alcaPCCRandom"),
         resetEveryNLumi = cms.untracked.int32(1),
-        trigstring = cms.untracked.string("rawPCRandom"), 
+        trigstring = cms.untracked.string("rawPCCRandom"), 
         #Below is a list of module IDs that will be ignored in calculation of luminosity
         modVeto=cms.vint32(303042564,303042568,303042572,303042576,303042580,303042584,303042588,303042592,303046660,303046664,303046668,303046672,303046676,303046680,303046684,303046688,303050756,303050760,303050764,303050768,303050772,303050776,303050780,303050784,303054852,303054856,303054860,303054864,303054868,303054872,303054876,303054880,303058948,303058952,303058956,303058960,303058964,303058968,303058972,303058976,303063044,303063048,303063052,303063056,303063060,303063064,303063068,303063072,303067140,303067144,303067148,303067152,303067156,303067160,303067164,303067168,303071236,303071240,303071244,303071248,303071252,303071256,303071260,303071264,303075332,303075336,303075340,303075344,303075348,303075352,303075356,303075360,303079428,303079432,303079436,303079440,303079444,303079448,303079452,303079456,303083524,303083528,303083532,303083536,303083540,303083544,303083548,303083552,303087620,303087624,303087628,303087632,303087636,303087640,303087644,303087648)
     )
@@ -33,7 +32,7 @@ process.corrPCCProd = cms.EDProducer("CorrPCCProducer",
     CorrPCCProducerParameters = cms.PSet(
         #Mod factor to count lumi and the string to specify output 
         inLumiObLabel = cms.string("rawPCCProd"),
-        ProdInst = cms.string("rawPCRandom"),
+        ProdInst = cms.string("rawPCCRandom"),
         resetEveryNLumi=cms.int32(50),
         trigstring = cms.untracked.string("corrPCCRand"), 
         type2_a= cms.double(0.00072),
@@ -47,7 +46,7 @@ process.load("CondCore.CondDB.CondDB_cfi")
 #process.load("CondCore.DBCommon.CondDBCommon_cfi")
 
 
-process.CondDB.connect = "sqlite_file:testcorrLumiCombined.db"
+process.CondDB.connect = "sqlite_file:corrections.db"
 #process.source = cms.Source("EmptySource")
 
 #process.source = cms.Source("EmptyIOVSource",
@@ -67,7 +66,7 @@ process.PoolDBOutputService = cms.Service("PoolDBOutputService",
 )
 #From the end path, this is where we specify format for our output.
 process.out = cms.OutputModule("PoolOutputModule",
-    fileName = cms.untracked.string('raw_corr_PCC_297411_RD.root'),
+    fileName = cms.untracked.string('raw_corr_PCC_RD.root'),
     outputCommands = cms.untracked.vstring('drop *', 
         'keep *_rawPCCProd_*_*',
         'keep *_corrPCCProd_*_*')
