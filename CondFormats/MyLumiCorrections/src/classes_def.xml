@@ -1,0 +1,5 @@
+<lcgdict>
+   <class name="MyLumiCorrections" class_version="0"/>
+   <!--<class name="MyLumiCorrections::aCorrection"/>
+   <class name="std::vector<MyLumiCorrections::aCorrection>"/>-->
+</lcgdict>  

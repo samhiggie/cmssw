@@ -43,6 +43,12 @@ public:
   /// destructor
   ~LumiInfo(){}
 
+  //Total Luminosity Saved 
+  float totalrawLuminosity() const{return totalLuminosity_;}
+
+  //Statistical Error on total lumi
+  float statErrorOnLumi() const{return statErrorOnLumi_;}
+
   // Instantaneous luminosity (in Hz/ub)
   float instLuminosity() const;
 
@@ -60,9 +66,14 @@ public:
   // lumi section length in seconds = numorbits*3564*25e-09
   float lumiSectionLength() const;
 
+  void setInstLumi(std::vector<float>& instLumiByBX);
+
+  void setErrLumiBX(std::vector<float>& errLumiByBX);
+
   // Inst lumi by bunch
   float getInstLumiBX(int bx) const { return instLumiByBX_.at(bx); }
   const std::vector<float>& getInstLumiAllBX() const { return instLumiByBX_; }
+  const std::vector<float>& getErrorLumiAllBX() const { return errLumiByBX_; }
 
   bool isProductEqual(LumiInfo const& next) const;
 
@@ -71,14 +82,17 @@ public:
   //
 
   void setDeadFraction(float deadtimeFraction) { deadtimeFraction_ = deadtimeFraction; }
-  // fill inst lumi
-  void fill(const std::vector<float>& instLumiByBX);
-  // synonym for above
-  void fillInstLumi(const std::vector<float>& instLumiByBX);
+  //set the total raw luminosity
+  void setTotalLumi(float totalLumi){ totalLuminosity_=totalLumi;}
+  //set the statistical error
+  void setStatErrorOnLumi(float statError){ statErrorOnLumi_=statError;}
 
 private:
+  float totalLuminosity_;
+  float statErrorOnLumi_;
   float deadtimeFraction_;
   std::vector<float> instLumiByBX_;
+  std::vector<float> errLumiByBX_;
 }; 
 
 std::ostream& operator<<(std::ostream& s, const LumiInfo& lumiInfo);

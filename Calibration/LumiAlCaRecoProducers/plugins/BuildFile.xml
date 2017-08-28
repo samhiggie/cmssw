@@ -1,0 +1,35 @@
+<use   name="FWCore/MessageLogger"/>
+<use   name="FWCore/Framework"/>
+<use   name="FWCore/ParameterSet"/>
+
+<use   name="CondCore/Utilities"/>
+<use   name="FWCore/ServiceRegistry"/>
+<use   name="FWCore/PluginManager"/>
+<use name="CondFormats/LumiCorrections"/>
+<use name="CoralBase"/>
+<use   name="CondCore/DBOutputService"/>
+<use name="CondCore/ESSources"/>
+
+<use   name="Calibration/LumiAlCaRecoProducers"/>
+<use   name="DataFormats/Luminosity"/>
+<use name="CondFormats/DataRecord"/>
+<flags EDM_PLUGIN="1"/>
+
+<!--<use name="DataFormats/TrackReco"/>
+<use name="CommonTools/UtilAlgos"/>
+<use name="PhysicsTools/UtilAlgos"/>-->
+
+
+<library   file="AlcaPCCProducer.cc" name="AlcaPCCProducer">
+  <flags   EDM_PLUGIN="1"/>
+</library>
+<library   file="RawPCCProducer.cc" name="RawPCCProducer">
+  <flags   EDM_PLUGIN="1"/>
+</library>
+<library   file="CorrPCCProducer.cc" name="CorrPCCProducer">
+  <flags   EDM_PLUGIN="1"/>
+</library>
+<library   file="LumiPCCProducer.cc" name="LumiPCCProducer">
+  <flags   EDM_PLUGIN="1"/>
+</library>
+

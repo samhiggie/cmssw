@@ -1,0 +1,9 @@
+<use name="FWCore/Framework"/>
+<use name="FWCore/PluginManager"/>
+<use name="CondCore/ESSources"/>
+<!--<use name="CondFormats/CondTest"/>-->
+<use name="CondFormats/DataRecord"/>
+<use name="CondFormats/DataRecord/interface/LumiCorrectionsRcd.h"/>
+<use name="CondFormats/LumiCorrections"/>
+
+<flags EDM_PLUGIN="1"/>

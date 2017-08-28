@@ -1,0 +1,8 @@
+<use name="FWCore/Framework"/>
+<use name="CondCore/ESSources"/>
+<!--<use name="CondFormats/CondTest"/>-->
+<use name="CondFormats/DataRecord"/>
+<use name="CondFormats/DataRecord/interface/MyLumiCorrectionsRcd.h"/>
+<use name="CondFormats/MyLumiCorrections"/>
+
+<flags EDM_PLUGIN="1"/>

@@ -1,0 +1,3 @@
+<bin file="test_serialization.cc">
+    <use name="CondFormats/MyLumiCorrections"/>
+</bin>
