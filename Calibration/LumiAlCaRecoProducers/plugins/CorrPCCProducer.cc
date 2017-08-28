@@ -125,6 +125,7 @@ class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one
     TGraphErrors *type1resGraph;
     TGraphErrors *type2resGraph;
     TList *hlist;//list for the clusters and corrections 
+    TFile * outf;
 
     float type1frac;
     std::vector<float> t1fUncVect;
@@ -513,32 +514,46 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
 
     //Try adding the TFileservice here...
     //edm::Service<TFileService> fs; 
-
-    char *filename = new char[50];
-    sprintf(filename,"Hist_Run_%d.root",runSeg.run());
-    TFile * outf = new TFile(filename, "RECREATE");
+    std::cout<<"Initializing Output file"<<std::endl;
+    TFile * outf = new TFile("CorrectionHisto.root", "RECREATE");
     outf->cd();
+    std::cout<<"Intializing Arrays"<<std::endl;
     TH1F *corrlumiAvg_h[int(nBlocks)+1];
     TH1F *scaleFactorAvg_h[int(nBlocks)+1];
     TH1F *lumiAvg_h[int(nBlocks)+1];
     TH1F *corrlumi_h[int(nBlocks)+1]; 
     TH1F *scaleFactor_h[int(nBlocks)+1]; 
     TH1F *lumi_h[int(nBlocks)+1]; 
+    std::cout<<"Intializing Names"<<std::endl;
     char *histname = new char[100];
     char *histname2 = new char[100];
     char *histname3 = new char[100];
     char *histname4 = new char[100];
     char *histname5 = new char[100];
     char *histname6 = new char[100];
+    char *histTitle1 = new char[100];
+    char *histTitle2 = new char[100];
+    char *histTitle3 = new char[100];
+    char *graphTitle1 = new char[100];
+    char *graphTitle2 = new char[100];
+    char *graphTitle3 = new char[100];
+    std::cout<<"Names Initialized"<<std::endl; 
 
-    type1fracHist = new TH1D("Type 1 Fraction","Type 1 Fraction",1000,-0.5,0.5);
-    type1resHist = new TH1D("Type 1 Residual","Type 1 Residual",4000,-0.2,0.2);
-    type2resHist = new TH1D("Type 2 Residual","Type 2 Residual",4000,-0.2,0.2);
+    sprintf(histTitle1,"Type1Fraction_%d",runSeg.run());
+    sprintf(histTitle2,"Type1Res_%d",runSeg.run());
+    sprintf(histTitle3,"Type2Res_%d",runSeg.run());
+    type1fracHist = new TH1D(histTitle1,histTitle1,1000,-0.5,0.5);
+    type1resHist = new TH1D(histTitle2,histTitle2,4000,-0.2,0.2);
+    type2resHist = new TH1D(histTitle3,histTitle3,4000,-0.2,0.2);
 
+    sprintf(graphTitle1,"Type1Fraction_%d",runSeg.run());
+    sprintf(graphTitle2,"Type1Res_%d",runSeg.run());
+    sprintf(graphTitle3,"Type2Res_%d",runSeg.run());
     type1fracGraph = new TGraphErrors();
     type1resGraph = new TGraphErrors();
     type2resGraph = new TGraphErrors();
 
+    std::cout<<"Graphs Initialized"<<std::endl; 
     //Setting the data in the run but in a lumisection range
     for(it=myInfoPointers.begin(); (it!=myInfoPointers.end()); ++it) {
 
@@ -567,12 +582,12 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
                  
         //histos
         int block = (it->first.first-1)*nBlocks/totalLS;  //iBlock*totalLS/nBlocks+1
-        sprintf(histname, "CorrectedLumiAvg_%d_%d_%d",block,it->first.first,it->first.second);
-        sprintf(histname2, "ScaleFactorsAvg_%d_%d_%d",block,it->first.first,it->first.second);
-        sprintf(histname3, "RawLumiAvg_%d_%d_%d",block,it->first.first,it->first.second);
-        sprintf(histname4, "CorrectedLumi_%d_%d_%d",block,it->first.first,it->first.second);
-        sprintf(histname5, "ScaleFactors_%d_%d_%d",block,it->first.first,it->first.second);
-        sprintf(histname6, "RawLumi_%d_%d_%d",block,it->first.first,it->first.second);
+        sprintf(histname, " CorrectedLumiAvg_%d_%d_%d_%d",runSeg.run(),block,it->first.first,it->first.second);
+        sprintf(histname2, " ScaleFactorsAvg_%d_%d_%d_%d",runSeg.run(),block,it->first.first,it->first.second);
+        sprintf(histname3, " RawLumiAvg_%d_%d_%d_%d",runSeg.run(),block,it->first.first,it->first.second);
+        sprintf(histname4, " CorrectedLumi_%d_%d_%d_%d",runSeg.run(),block,it->first.first,it->first.second);
+        sprintf(histname5, " ScaleFactors_%d_%d_%d_%d",runSeg.run(),block,it->first.first,it->first.second);
+        sprintf(histname6, " RawLumi_%d_%d_%d_%d",runSeg.run(),block,it->first.first,it->first.second);
 
         std::cout<<"Histogram Name "<<histname<<std::endl;
         corrlumiAvg_h[block]=new TH1F(histname,"",LumiConstants::numBX,1,LumiConstants::numBX);
@@ -657,9 +672,9 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
         
     }
      
-     type1fracGraph->SetName("Type 1 Fraction");
-     type1resGraph->SetName("Type 1 Residual");
-     type2resGraph->SetName("Type 2 Residual");
+     type1fracGraph->SetName(graphTitle1);
+     type1resGraph->SetName(graphTitle2);
+     type2resGraph->SetName(graphTitle3);
  
      type1fracGraph->SetMarkerStyle(8);
      type1resGraph->SetMarkerStyle(8);

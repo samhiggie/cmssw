@@ -14,6 +14,7 @@ config.section_("JobType")
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'raw_corr_Random_cfg.py'
 config.JobType.allowUndistributedCMSSW = True
+config.JobType.outputFiles = ['correctionsC.db','CorrectionHisto.root']
 
 
 #config.JobType.inputFiles = ['dttf_config.db']
