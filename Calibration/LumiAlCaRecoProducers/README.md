@@ -1,4 +1,4 @@
-#Luminosity Producer using Pixel Cluster Counting
+# Luminosity Producer using Pixel Cluster Counting
 
 These are the instructions to setup the environment for and to produce Luminosity using the Pixel Cluster Counting method. Please follow the installation instructions before proceeding to the run steps. 
 
