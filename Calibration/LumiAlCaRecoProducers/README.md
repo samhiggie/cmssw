@@ -1,12 +1,19 @@
 #Project Title 
 These are the instructions to setup the environment for and to produce Luminosity using the Pixel Cluster Counting method. Please follow the installation instructions before proceeding to the run steps. 
 
+Note: Although all cfg's run. The final crab job that processes the lumi, taking the corrections and applying them still needs work. 
+Remaining Tasks:
+1. Develope a way to merge .db files.
+  Work in progess:
+    trying to incorporate code like 
+    https://github.com/cms-sw/cmssw/blob/master/RecoVertex/BeamSpotProducer/scripts/createPayload.py
+    https://github.com/cms-sw/cmssw/blob/master/RecoVertex/BeamSpotProducer/scripts/CommonMethods.py#L928
+2. Add the LumiCorrections and it's record to the main alca database. 
+3. Forward Port - make compatible with CMSSW master. 
 
 ### Installing
 
 A step by step series of examples that tell you have to get a development env running
-
-Say what the step will be
 
 
 ```
@@ -15,14 +22,9 @@ cmsrel CMSSW_9_2_0
 cd CMSSW_9_2_0/src
 cmsenv
 git cms-init 
-git cms-addpkg Calibration/LumiAlCaRecoProducers 
-git cms-addpkg DataFormats/Luminosity 
-git cms-addpkg CondFormats/LumiCorrections
-git cms-addpkg CondFormats/DataRecord
-git cms-addpkg CondCore/LumiCorrectionsPlugin/ 
-
+git cms-merge-topic samhiggie:PCC_9_2_X_withCorr
 scram b -j 16
-
+scram b -j 16
 ```
 
 
