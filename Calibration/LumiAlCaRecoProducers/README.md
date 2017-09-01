@@ -1,4 +1,5 @@
-#Project Title 
+#Luminosity Producer using Pixel Cluster Counting
+
 These are the instructions to setup the environment for and to produce Luminosity using the Pixel Cluster Counting method. Please follow the installation instructions before proceeding to the run steps. 
 
 Note: Although all cfg's run. The final crab job that processes the lumi, taking the corrections and applying them still needs work. 
