@@ -11,6 +11,11 @@ process.source = cms.Source("PoolSource",
     'file:/eos/cms/store/data/Run2017B/AlCaLumiPixels/ALCARECO/AlCaPCCRandom-PromptReco-v1/000/297/411/00000/0AC6C13D-F259-E711-AB3A-02163E019E8E.root',
     #'file:/eos/cms/store/data/Run2017B/AlCaLumiPixels/ALCARECO/AlCaPCCRandom-PromptReco-v1/000/297/411/00000/1E2F6E5E-0C5A-E711-88B4-02163E01A420.root',
     #'file:/eos/cms/store/data/Run2017B/AlCaLumiPixels/ALCARECO/AlCaPCCRandom-PromptReco-v1/000/297/411/00000/E2BA90F8-F559-E711-8805-02163E01A3BB.root',
+    #'/store/data/Run2017C/AlCaLumiPixels/ALCARECO/AlCaPCCRandom-PromptReco-v1/000/299/481/00000/3A06DA83-D570-E711-B3F1-02163E01A772.root',
+    #'/store/data/Run2017C/AlCaLumiPixels/ALCARECO/AlCaPCCRandom-PromptReco-v1/000/299/481/00000/406418A6-0B71-E711-86BB-02163E0134CB.root',
+    #'/store/data/Run2017C/AlCaLumiPixels/ALCARECO/AlCaPCCRandom-PromptReco-v1/000/299/481/00000/A29FB0E5-D270-E711-A448-02163E019E16.root',
+    #'/store/data/Run2017C/AlCaLumiPixels/ALCARECO/AlCaPCCRandom-PromptReco-v1/000/299/481/00000/BC807081-DB70-E711-8965-02163E01A61A.root',
+
 )
     
 )

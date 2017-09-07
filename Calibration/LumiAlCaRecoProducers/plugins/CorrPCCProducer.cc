@@ -100,19 +100,16 @@ class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one
     std::vector<float> corr_list2_;//list of scale factors to apply.
     float Overall_corr;//The Overall correction to the integrated luminosity
 
-    int totalLS=3000;//Max number of Lumisections in a run! Change this later to something more robust
-    //mergedLS=100;
-    float nBlocks=0;
-    //std::vector<std::pair<int,int>> iovs;//move this to global later 
-    std::map<std::pair<int,int>, LumiInfo*>::iterator it; 
-    std::map<std::pair<int,int>, LumiInfo*> myInfoPointers;//map to obtain iov for lumiOb corrections to the luminosity. 
+    unsigned int totalLS=3000;//Max number of Lumisections in a run! Change this later to something more robust
+    unsigned int nBlocks=0;
     unsigned int minimumNumberOfEvents;
-    //The Penultimate solution....
-    //std::vector<std::pair<std::pair<int,int>,LumiInfo*>> myInfoVector;//Will save this object to the run
+
+    std::map<std::pair<unsigned int,unsigned int>, LumiInfo*>::iterator it; 
+    std::map<std::pair<unsigned int,unsigned int>, LumiInfo*> myInfoPointers;//map to obtain iov for lumiOb corrections to the luminosity. 
 
     //Why not some histos at this point?!
-    TH1D  *clustersBxHist;
-    TH1D  *corrLumiHist;
+    TH1D *clustersBxHist;
+    TH1D *corrLumiHist;
     TH1F *corrlumiAvg_h;
     TH1F *scaleFactorAvg_h;
     TH1F *lumiAvg_h;
@@ -135,12 +132,10 @@ class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one
     float t1fUnc;//Type 1 fraction uncertainty rms
     float t1rUnc;//Type 1 residual uncertainty rms 
     float t2rUnc;//Type 2 residual uncertainty rms 
-    int nTrain;//Number of bunch trains used in calc type 1 and 2 res, frac.
-    int countLumi_;//The lumisection count... the size of the lumiblock
-    int resetNLumi_;//The number of lumisections per block.
-    int iov1;//beginning lumisection for iov
-    int iov2;//end lumisection for iov
-    int thisLS;//Ending lumisection for the iov that we save with the lumiInfo object.
+    unsigned int nTrain;//Number of bunch trains used in calc type 1 and 2 res, frac.
+    unsigned int countLumi_;//The lumisection count... the size of the lumiblock
+    unsigned int resetNLumi_;//The number of lumisections per block.
+    unsigned int thisLS;//Ending lumisection for the iov that we save with the lumiInfo object.
 
     //double type1_; //Initial type 1 correction factor
     double type2_a_;//amplitude for the type 2 correction 
@@ -149,7 +144,6 @@ class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one
     
     //output 
     std::unique_ptr<LumiInfo> outLumiOb;//lumi object with corrections per BX
-    //std::unique_ptr<LumiInfo> thisLSLumiInfo;//lumi object with corrections per BX
     std::unique_ptr<float> Type1frac;
     std::unique_ptr<float> Type1res;
     std::unique_ptr<float> Type2res;
@@ -157,9 +151,7 @@ class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one
     std::unique_ptr<float> T1rUnc;
     std::unique_ptr<float> T2rUnc;
     
-    LumiCorrections* pLumiCorrections;
-    
-
+    LumiCorrections* pccCorrections;
 };
 
 //--------------------------------------------------------------------------------------------------
@@ -212,11 +204,11 @@ std::vector<float>& CorrPCCProducer::MakeCorrections(std::vector<float>& correct
 }
 
 //--------------------------------------------------------------------------------------------------
+// This method builds the single bunch response given an exponential function (type 2 only)
 void  CorrPCCProducer::MakeCorrectionTemplate(){
     for(unsigned int bx=1;bx<LumiConstants::numBX;bx++){
        correctionTemplate_.at(bx)=type2_a_*exp(-(float(bx)-1)*type2_b_);
     }
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -231,69 +223,39 @@ float CorrPCCProducer::GetMaximum(std::vector<float> lumi_vector){
 
 
 //--------------------------------------------------------------------------------------------------
+// This method takes luminosity from the last bunch in a train and makes a comparison with 
+// the follow non-active bunch crossing to estimate the spill over fraction (type 1 afterglow).
 void CorrPCCProducer::EstimateType1Frac(std::vector<float> uncorrPCCPerBX, float &type1frac){
-    
     std::vector<float> corrected_tmp_; 
     for(size_t i=0; i<uncorrPCCPerBX.size(); i++){
         corrected_tmp_.push_back(uncorrPCCPerBX.at(i));
     }
-    bool gap=false;
-    int idl=0;
-    int num_cut=20;
-    float noise=0;
-//Finds the gap and the noise 
-    for(int l=0; l<500; l++){
-        if (corrected_tmp_.at(l)==0 && corrected_tmp_.at(l+1)==0 && corrected_tmp_.at(l+2)==0){
-            gap=true;
-        }
-        if(gap && corrected_tmp_.at(l)!=0 && idl<num_cut){
-//is this full flat noise subtraction?
-            noise+=corrected_tmp_.at(l);
-            idl+=1;
-        }
-
-    }
-
-    if(idl!=0){
-        noise=noise/idl;
-    }
-
-    else{
-        noise=0;
-
-    }
    
 
     //Apply initial type 1 correction
-   for(size_t k=0;k<LumiConstants::numBX-1; k++){ 
-       float bin_k = corrected_tmp_.at(k);
-       corrected_tmp_.at(k+1)=corrected_tmp_.at(k+1)-type1frac*bin_k;
-  
-   }
+    for(size_t k=0;k<LumiConstants::numBX-1; k++){ 
+        float bin_k = corrected_tmp_.at(k);
+        corrected_tmp_.at(k+1)=corrected_tmp_.at(k+1)-type1frac*bin_k; 
+    }
  
 
-   //Apply type 2 correction
-   for(size_t i=0; i<LumiConstants::numBX-1; i++){
-       for(size_t j=i+1; j<i+LumiConstants::numBX-1; j++){
-           float bin_i = corrected_tmp_.at(i);
-           if (j<LumiConstants::numBX){
-               corrected_tmp_.at(j)=corrected_tmp_.at(j)-bin_i*correctionTemplate_.at(j-i);
-           } 
-           
-           else{
-               corrected_tmp_.at(j-LumiConstants::numBX) = corrected_tmp_.at(j-LumiConstants::numBX)-bin_i*correctionTemplate_.at(j-i);
-           }
-       }
-
+    //Apply type 2 correction
+    for(size_t i=0; i<LumiConstants::numBX-1; i++){
+        for(size_t j=i+1; j<i+LumiConstants::numBX-1; j++){
+            float bin_i = corrected_tmp_.at(i);
+            if (j<LumiConstants::numBX){
+                corrected_tmp_.at(j)=corrected_tmp_.at(j)-bin_i*correctionTemplate_.at(j-i);
+            } else {
+                corrected_tmp_.at(j-LumiConstants::numBX) = corrected_tmp_.at(j-LumiConstants::numBX)-bin_i*correctionTemplate_.at(j-i);
+            }
+        }
     }
-    //mean_type2=mean_type2/(LumiConstants::numBX);
   
     //Apply additional iteration for type 1 correction
     float lumiMax = GetMaximum(corrected_tmp_);
     float threshold = lumiMax*0.2;  //need to be changed to GetMaximum()*0.2
    
     mean_type1 = 0;  //Calculate the mean value of the type 1 residual 
-    //mean_type2 = 0;  //Calculate the mean value of the type 2 residual 
     nTrain = 0;
     for(size_t ibx=2; ibx<LumiConstants::numBX-5; ibx++){
         //float lumiM1 = corrected_tmp_.at(ibx-1);
@@ -308,12 +270,6 @@ void CorrPCCProducer::EstimateType1Frac(std::vector<float> uncorrPCCPerBX, float
         if(lumi>threshold && lumiP1<threshold && lumiP2<threshold){
             float thisType1=(lumiP1-(lumiP3+lumiP4+lumiP5)/3)/lumi;
             mean_type1+=thisType1;
-            //if(thisType1>0){
-            //    mean_type1+=thisType1;
-            //} else {
-            //    std::cout<<"nTrain "<<nTrain<<" thisType1 "<<thisType1<<std::endl;
-            //    std::cout<<"lumi p3 p4 p5 "<<lumi<<" "<<lumiP3<<" "<<lumiP4<<" "<<lumiP5<<std::endl;
-            //}
             nTrain+=1;
         }
     } 
@@ -325,13 +281,16 @@ void CorrPCCProducer::EstimateType1Frac(std::vector<float> uncorrPCCPerBX, float
     }
 
     type1frac+=mean_type1;
-    //t1fUncVect.push_back(mean_type1);
 }
 
 //--------------------------------------------------------------------------------------------------
 void CorrPCCProducer::CalculateCorrections (std::vector<float> uncorrected, std::vector<float>& corr_list_, float& Overall_corr){
     std::cout<<"Making Corrections"<<std::endl;
     type1frac = 0;
+    EstimateType1Frac(uncorrected, type1frac);
+    std::cout<<type1frac<<std::endl;
+    EstimateType1Frac(uncorrected, type1frac);
+    std::cout<<type1frac<<std::endl;
     EstimateType1Frac(uncorrected, type1frac);
     std::cout<<type1frac<<std::endl;
     EstimateType1Frac(uncorrected, type1frac);
@@ -349,31 +308,26 @@ void CorrPCCProducer::CalculateCorrections (std::vector<float> uncorrected, std:
         corrected_tmp_.push_back(uncorrected.at(i));
     }
 
-    //Apply initial type 1 correction
-    for(size_t k=0;k<LumiConstants::numBX-1; k++){ 
-       float bin_k = corrected_tmp_.at(k);
-       corrected_tmp_.at(k+1)=corrected_tmp_.at(k+1)-type1frac*bin_k;
-  
-    }
- 
 
-   //Apply type 2 correction
-   for(size_t i=0; i<LumiConstants::numBX-1; i++){
-       for(size_t j=i+1; j<i+LumiConstants::numBX-1; j++){
-           float bin_i = corrected_tmp_.at(i);
-           if (j<LumiConstants::numBX){
-               corrected_tmp_.at(j)=corrected_tmp_.at(j)-bin_i*correctionTemplate_.at(j-i);
-           } 
-           
-           else{
-               corrected_tmp_.at(j-LumiConstants::numBX) = corrected_tmp_.at(j-LumiConstants::numBX)-bin_i*correctionTemplate_.at(j-i);
-           }
-       }
-
+    //Apply all corrections
+    for(size_t i=0; i<LumiConstants::numBX-1; i++){
+        // type 1 - first (spillover from previous BXs real clusters)
+        float bin_i = corrected_tmp_.at(i);
+        corrected_tmp_.at(i+1)=corrected_tmp_.at(i+1)-type1frac*bin_i;
+       
+        // type 2 - after (comes from real activation)
+        bin_i = corrected_tmp_.at(i);
+        for(size_t j=i+1; j<i+LumiConstants::numBX-1; j++){
+            if(j<LumiConstants::numBX){
+                corrected_tmp_.at(j)=corrected_tmp_.at(j)-bin_i*correctionTemplate_.at(j-i);
+            }else{
+                corrected_tmp_.at(j-LumiConstants::numBX) = corrected_tmp_.at(j-LumiConstants::numBX)-bin_i*correctionTemplate_.at(j-i);
+            }
+        }
     }
 
-   float lumiMax = GetMaximum(corrected_tmp_);
-   float threshold = lumiMax*0.2;  //need to be changed to GetMaximum()*0.2
+    float lumiMax = GetMaximum(corrected_tmp_);
+    float threshold = lumiMax*0.2;  //need to be changed to GetMaximum()*0.2
 
     //change naming convention here.... call them residuals
     mean_type1 = 0;  //Calculate the mean value of the type 1 residual 
@@ -381,23 +335,24 @@ void CorrPCCProducer::CalculateCorrections (std::vector<float> uncorrected, std:
     float mean_sq_type1 = 0; 
     nTrain = 0;
     for(size_t ibx=2; ibx<LumiConstants::numBX-5; ibx++){
-            //float lumiM1 = corrected_tmp_.at(ibx-1);
-            float lumi   = corrected_tmp_.at(ibx);
-            float lumiP1 = corrected_tmp_.at(ibx+1);
-            float lumiP2 = corrected_tmp_.at(ibx+2);
-            float lumiP3 = corrected_tmp_.at(ibx+3);
-            float lumiP4 = corrected_tmp_.at(ibx+4);
-            float lumiP5 = corrected_tmp_.at(ibx+5);
-       
-            //Where type 1 and type 2 residuals are computed
-            if(lumi>threshold && lumiP1<threshold && lumiP2<threshold){
-                mean_type1+=(lumiP1-(lumiP3+lumiP4+lumiP5)/3)/lumi;
-                mean_sq_type1+=TMath::Power((lumiP1-(lumiP3+lumiP4+lumiP5)/3)/lumi, 2);
-                mean_type2+=(lumiP3+lumiP4+lumiP5)/(3*lumi);
-                //mean_type2+=TMath::Power((lumiP3+lumiP4+lumiP5)/(3*lumi)i,2);
-                nTrain+=1;
-            }
-        } 
+        //float lumiM1 = corrected_tmp_.at(ibx-1);
+        float lumi   = corrected_tmp_.at(ibx);
+        float lumiP1 = corrected_tmp_.at(ibx+1);
+        float lumiP2 = corrected_tmp_.at(ibx+2);
+        float lumiP3 = corrected_tmp_.at(ibx+3);
+        float lumiP4 = corrected_tmp_.at(ibx+4);
+        float lumiP5 = corrected_tmp_.at(ibx+5);
+    
+        //Where type 1 and type 2 residuals are computed
+        if(lumi>threshold && lumiP1<threshold && lumiP2<threshold){
+            mean_type1+=(lumiP1-(lumiP3+lumiP4+lumiP5)/3)/lumi;
+            mean_sq_type1+=TMath::Power((lumiP1-(lumiP3+lumiP4+lumiP5)/3)/lumi, 2);
+            mean_type2+=(lumiP3+lumiP4+lumiP5)/(3*lumi);
+            //mean_type2+=TMath::Power((lumiP3+lumiP4+lumiP5)/(3*lumi)i,2);
+            nTrain+=1;
+        }
+    }
+
     //Added condition in case nTrain is 0 and we get the nan(s)  
     if (nTrain!=0){
         mean_type1 = mean_type1/nTrain;
@@ -406,31 +361,31 @@ void CorrPCCProducer::CalculateCorrections (std::vector<float> uncorrected, std:
         t1rUnc = sqrt(mean_sq_type1-mean_type1*mean_type1)/sqrt(nTrain);
         t2rUnc =TMath::Sqrt(t2rUnc/nTrain);
         t2rUnc = 1/sqrt(3*nTrain); 
+    }else{
+        mean_type1=0;
     }
-    else{mean_type1=0;}
 
     t1fUncVect.push_back(mean_type1);
 
            
-   float Integral_Uncorr=0;
-   float Integral_Corr = 0;
-   //Calculate Per-BX correction factor and overall correction factor
-   for (size_t ibx=0; ibx<corrected_tmp_.size(); ibx++){
-       if(corrected_tmp_.at(ibx)>threshold){
-           Integral_Uncorr+=uncorrected.at(ibx);
-           Integral_Corr+=corrected_tmp_.at(ibx);
-       }
-       if(corrected_tmp_.at(ibx)!=0.0&&uncorrected.at(ibx)!=0.0){ 
-       corr_list_.at(ibx) = corrected_tmp_.at(ibx)/uncorrected.at(ibx);
-       corr_list2_.at(ibx) = corrected_tmp_.at(ibx)/uncorrected.at(ibx);
-       }
-       else{
-       corr_list_.at(ibx) = 0.0;
-       corr_list2_.at(ibx) = 0.0;
-       }
-   }
+    float Integral_Uncorr=0;
+    float Integral_Corr = 0;
+    //Calculate Per-BX correction factor and overall correction factor
+    for (size_t ibx=0; ibx<corrected_tmp_.size(); ibx++){
+        if(corrected_tmp_.at(ibx)>threshold){
+            Integral_Uncorr+=uncorrected.at(ibx);
+            Integral_Corr+=corrected_tmp_.at(ibx);
+        }
+        if(corrected_tmp_.at(ibx)!=0.0&&uncorrected.at(ibx)!=0.0){ 
+            corr_list_.at(ibx) = corrected_tmp_.at(ibx)/uncorrected.at(ibx);
+            corr_list2_.at(ibx) = corrected_tmp_.at(ibx)/uncorrected.at(ibx);
+        }else{
+            corr_list_.at(ibx) = 0.0;
+            corr_list2_.at(ibx) = 0.0;
+        }
+    }
  
-   Overall_corr = Integral_Corr/Integral_Uncorr;  
+    Overall_corr = Integral_Corr/Integral_Uncorr;  
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -444,14 +399,6 @@ void CorrPCCProducer::beginRun(edm::Run const& runSeg, const edm::EventSetup& iS
 //--------------------------------------------------------------------------------------------------
 void CorrPCCProducer::beginLuminosityBlock(edm::LuminosityBlock const& lumiSeg, const edm::EventSetup& iSetup){
     countLumi_++;
-
-    //beginning of lumiblock
-    iov1 = lumiSeg.luminosityBlock();
-        
-    //Lumi-Range setters 
-    if(resetNLumi_!=0&&countLumi_%resetNLumi_!=0){return;}
-    nBlocks++;
-
 }
 
 
@@ -501,14 +448,17 @@ void CorrPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, co
     }
 
     if(!found) {
+        // add entry and increment counter
+        nBlocks++;
+    
         std::pair<int,int> lsKey;
         lsKey=std::make_pair(thisLS - thisLS%resetNLumi_+1,thisLS - thisLS%resetNLumi_+resetNLumi_);
         std::cout<<"Found a new range and object "<<lsKey.first<<":"<<lsKey.second<<std::endl;
         myInfoPointers[lsKey]= new LumiInfo();
         thisLSLumiInfo = myInfoPointers[lsKey];
         for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
-                totalLumiByBX_[bx]=0.0;
-                events_[bx]=0.0;
+            totalLumiByBX_[bx]=0.0;
+            events_[bx]=0.0;
         }
     }
 }
@@ -532,6 +482,8 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
     //Setting up database parameters
     edm::Service<cond::service::PoolDBOutputService> poolDbService;
     cond::Time_t thisIOV = 1;
+
+    if(int(nBlocks)!=int(myInfoPointers.size())) std::cout<<"nBlocks myInfoPointers.size() are different "<<nBlocks<<" "<<myInfoPointers.size()<<std::endl;
 
     //Try adding the TFileservice here...
     //edm::Service<TFileService> fs; 
@@ -567,15 +519,16 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
     type1resHist = new TH1D(histTitle2,histTitle2,4000,-0.2,0.2);
     type2resHist = new TH1D(histTitle3,histTitle3,4000,-0.2,0.2);
 
-    sprintf(graphTitle1,"Type1Fraction_%d",runSeg.run());
-    sprintf(graphTitle2,"Type1Res_%d",runSeg.run());
-    sprintf(graphTitle3,"Type2Res_%d",runSeg.run());
+    sprintf(graphTitle1,"Type1Fraction");
+    sprintf(graphTitle2,"Type1Res");
+    sprintf(graphTitle3,"Type2Res");
     type1fracGraph = new TGraphErrors();
     type1resGraph = new TGraphErrors();
     type2resGraph = new TGraphErrors();
 
     std::cout<<"Graphs Initialized"<<std::endl; 
     //Setting the data in the run but in a lumisection range
+    unsigned int iBlock=0;
     for(it=myInfoPointers.begin(); (it!=myInfoPointers.end()); ++it) {
 
         totalLumiByBX_=it->second->getInstLumiAllBX();
@@ -593,144 +546,131 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
         std::cout<<"This IOV "<<thisIOV<<std::endl;
 
         //Writing the corrections to SQL lite file for db. 
-        LumiCorrections* pLumiCorrections = new LumiCorrections();
-        pLumiCorrections->SetOverallCorrection(Overall_corr);
-        pLumiCorrections->SetType1Fraction(type1frac);
-        pLumiCorrections->SetType1Residual(mean_type1);
-        pLumiCorrections->SetType2Residual(mean_type2);
-        pLumiCorrections->SetCorrectionsBX(corr_list_);
+        pccCorrections = new LumiCorrections();
+        pccCorrections->SetOverallCorrection(Overall_corr);
+        pccCorrections->SetType1Fraction(type1frac);
+        pccCorrections->SetType1Residual(mean_type1);
+        pccCorrections->SetType2Residual(mean_type2);
+        pccCorrections->SetCorrectionsBX(corr_list_);
         
+        poolDbService->writeOne<LumiCorrections>(pccCorrections,thisIOV,"LumiCorrectionsRcd"); 
+        
+        // delete pccCorrections; //here??
 
-
-        poolDbService->writeOne<LumiCorrections>(pLumiCorrections,thisIOV,"LumiCorrectionsRcd"); 
-                 
         //histos
-        int block = (it->first.first-1)*nBlocks/totalLS;  //iBlock*totalLS/nBlocks+1
-        sprintf(histname, " CorrectedLumiAvg_%d_%d_%d_%d",runSeg.run(),block,it->first.first,it->first.second);
-        sprintf(histname2, " ScaleFactorsAvg_%d_%d_%d_%d",runSeg.run(),block,it->first.first,it->first.second);
-        sprintf(histname3, " RawLumiAvg_%d_%d_%d_%d",runSeg.run(),block,it->first.first,it->first.second);
-        sprintf(histname4, " CorrectedLumi_%d_%d_%d_%d",runSeg.run(),block,it->first.first,it->first.second);
-        sprintf(histname5, " ScaleFactors_%d_%d_%d_%d",runSeg.run(),block,it->first.first,it->first.second);
-        sprintf(histname6, " RawLumi_%d_%d_%d_%d",runSeg.run(),block,it->first.first,it->first.second);
+        sprintf(histname, " CorrectedLumiAvg_%d_%d_%d_%d",runSeg.run(),iBlock,it->first.first,it->first.second);
+        sprintf(histname2, " ScaleFactorsAvg_%d_%d_%d_%d",runSeg.run(),iBlock,it->first.first,it->first.second);
+        sprintf(histname3, " RawLumiAvg_%d_%d_%d_%d",runSeg.run(),iBlock,it->first.first,it->first.second);
+        sprintf(histname4, " CorrectedLumi_%d_%d_%d_%d",runSeg.run(),iBlock,it->first.first,it->first.second);
+        sprintf(histname5, " ScaleFactors_%d_%d_%d_%d",runSeg.run(),iBlock,it->first.first,it->first.second);
+        sprintf(histname6, " RawLumi_%d_%d_%d_%d",runSeg.run(),iBlock,it->first.first,it->first.second);
 
         std::cout<<"Histogram Name "<<histname<<std::endl;
-        corrlumiAvg_h[block]=new TH1F(histname,"",LumiConstants::numBX,1,LumiConstants::numBX);
-        scaleFactorAvg_h[block]=new TH1F(histname2,"",LumiConstants::numBX,1,LumiConstants::numBX);
-        lumiAvg_h[block]=new TH1F(histname3,"",LumiConstants::numBX,1,LumiConstants::numBX); 
-        corrlumi_h[block]=new TH1F(histname4,"",LumiConstants::numBX,1,LumiConstants::numBX); 
-        scaleFactor_h[block]=new TH1F(histname5,"",LumiConstants::numBX,1,LumiConstants::numBX); 
-        lumi_h[block]=new TH1F(histname6,"",LumiConstants::numBX,1,LumiConstants::numBX); 
+        corrlumiAvg_h[iBlock]=new TH1F(histname,"",LumiConstants::numBX,1,LumiConstants::numBX);
+        scaleFactorAvg_h[iBlock]=new TH1F(histname2,"",LumiConstants::numBX,1,LumiConstants::numBX);
+        lumiAvg_h[iBlock]=new TH1F(histname3,"",LumiConstants::numBX,1,LumiConstants::numBX); 
+        corrlumi_h[iBlock]=new TH1F(histname4,"",LumiConstants::numBX,1,LumiConstants::numBX); 
+        scaleFactor_h[iBlock]=new TH1F(histname5,"",LumiConstants::numBX,1,LumiConstants::numBX); 
+        lumi_h[iBlock]=new TH1F(histname6,"",LumiConstants::numBX,1,LumiConstants::numBX); 
 
         std::cout<<"Initialized Histograms"<<std::endl;
         for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
-            corrlumi_h[block]->SetBinContent(bx,totalLumiByBX_[bx]*corr_list_[bx]);
+            corrlumi_h[iBlock]->SetBinContent(bx,totalLumiByBX_[bx]*corr_list_[bx]);
             if(events_.at(bx)!=0){
-            corrlumi_h[block]->SetBinError(bx,totalLumiByBX_[bx]*corr_list_[bx]/TMath::Sqrt(events_[bx]));
+                corrlumi_h[iBlock]->SetBinError(bx,totalLumiByBX_[bx]*corr_list_[bx]/TMath::Sqrt(events_[bx]));
+            }else{
+                corrlumi_h[iBlock]->SetBinError(bx,0.0);
             }
-            else{
-            corrlumi_h[block]->SetBinError(bx,0.0);
-            }
-            scaleFactor_h[block]->SetBinContent(bx,corr_list_[bx]);
-            lumi_h[block]->SetBinContent(bx,totalLumiByBX_.at(bx));
+            scaleFactor_h[iBlock]->SetBinContent(bx,corr_list_[bx]);
+            lumi_h[iBlock]->SetBinContent(bx,totalLumiByBX_.at(bx));
         }
 
         //Do the division by number of events ("take the average here)"
         for(unsigned int i=0;i<LumiConstants::numBX;i++){
-        if(events_.at(i)!=0){
-            totalLumiByBXAvg_.at(i) =  totalLumiByBX_.at(i)/events_.at(i);
-        }
-        else{
-            totalLumiByBXAvg_.at(i)=0.0;
-        }
-   
+            if(events_.at(i)!=0){
+                totalLumiByBXAvg_.at(i) =  totalLumiByBX_.at(i)/events_.at(i);
+            }else{
+                totalLumiByBXAvg_.at(i)=0.0;
+            }
         }
 
-       
         //Normalized, take avg. PCC rather than total
         CalculateCorrections(totalLumiByBXAvg_,corr_list2_, Overall_corr); 
 
-
         for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
 
-            corrlumiAvg_h[block]->SetBinContent(bx,totalLumiByBXAvg_[bx]*corr_list2_[bx]);
+            corrlumiAvg_h[iBlock]->SetBinContent(bx,totalLumiByBXAvg_[bx]*corr_list2_[bx]);
             if(events_.at(bx)!=0){
-            corrlumiAvg_h[block]->SetBinError(bx,totalLumiByBXAvg_[bx]*corr_list2_[bx]/TMath::Sqrt(events_.at(bx)));
-            }
-            else{
-            corrlumiAvg_h[block]->SetBinError(bx,0.0);
+                corrlumiAvg_h[iBlock]->SetBinError(bx,totalLumiByBXAvg_[bx]*corr_list2_[bx]/TMath::Sqrt(events_.at(bx)));
+            }else{
+                corrlumiAvg_h[iBlock]->SetBinError(bx,0.0);
             }
 
-            scaleFactorAvg_h[block]->SetBinContent(bx,corr_list2_[bx]);
-            lumiAvg_h[block]->SetBinContent(bx,totalLumiByBXAvg_[bx]);
+            scaleFactorAvg_h[iBlock]->SetBinContent(bx,corr_list2_[bx]);
+            lumiAvg_h[iBlock]->SetBinContent(bx,totalLumiByBXAvg_[bx]);
             
-
-
         }
 
 
         //Array of histograms 
-        corrlumiAvg_h[block]->Write(); 
-        scaleFactorAvg_h[block]->Write(); 
-        lumiAvg_h[block]->Write(); 
+        corrlumiAvg_h[iBlock]->Write(); 
+        scaleFactorAvg_h[iBlock]->Write(); 
+        lumiAvg_h[iBlock]->Write(); 
         
-        corrlumi_h[block]->Write(); 
-        scaleFactor_h[block]->Write(); 
-        lumi_h[block]->Write(); 
+        corrlumi_h[iBlock]->Write(); 
+        scaleFactor_h[iBlock]->Write(); 
+        lumi_h[iBlock]->Write(); 
      
         type1fracHist->Fill(type1frac);
         type1resHist->Fill(mean_type1);
         type2resHist->Fill(mean_type2);
     
-        type1fracGraph->SetPoint(block,thisIOV+resetNLumi_/2.0,type1frac);
-        type1resGraph->SetPoint(block,thisIOV+resetNLumi_/2.0,mean_type1);
-        type2resGraph->SetPoint(block,thisIOV+resetNLumi_/2.0,mean_type2);
-        type1fracGraph->SetPointError(block,resetNLumi_/2.0, type1fracHist->GetStdDev());
-        type1resGraph->SetPointError(block,resetNLumi_/2.0,type1resHist->GetStdDev());
-        type2resGraph->SetPointError(block,resetNLumi_/2.0,type2resHist->GetStdDev());
+        type1fracGraph->SetPoint(iBlock,thisIOV+resetNLumi_/2.0,type1frac);
+        type1resGraph->SetPoint(iBlock,thisIOV+resetNLumi_/2.0,mean_type1);
+        type2resGraph->SetPoint(iBlock,thisIOV+resetNLumi_/2.0,mean_type2);
+        type1fracGraph->SetPointError(iBlock,resetNLumi_/2.0, type1fracHist->GetStdDev());
+        type1resGraph->SetPointError(iBlock,resetNLumi_/2.0,type1resHist->GetStdDev());
+        type2resGraph->SetPointError(iBlock,resetNLumi_/2.0,type2resHist->GetStdDev());
         
 
         //reset just in case
         type1frac=0.0;
         mean_type1=0.0;
         mean_type2=0.0;
-        
+        iBlock++;    
     }
      
-     type1fracGraph->SetName(graphTitle1);
-     type1resGraph->SetName(graphTitle2);
-     type2resGraph->SetName(graphTitle3);
+    type1fracGraph->SetName(graphTitle1);
+    type1resGraph->SetName(graphTitle2);
+    type2resGraph->SetName(graphTitle3);
  
-     type1fracGraph->SetMarkerStyle(8);
-     type1resGraph->SetMarkerStyle(8);
-     type2resGraph->SetMarkerStyle(8);
+    type1fracGraph->SetMarkerStyle(8);
+    type1resGraph->SetMarkerStyle(8);
+    type2resGraph->SetMarkerStyle(8);
 
-     type1fracGraph->GetYaxis()->SetTitle("Type 1 Fraction");
-     type1resGraph->GetYaxis()->SetTitle("Type 1 Residual");
-     type2resGraph->GetYaxis()->SetTitle("Type 2 Residual");
+    type1fracGraph->GetYaxis()->SetTitle("Type 1 Fraction");
+    type1resGraph->GetYaxis()->SetTitle("Type 1 Residual");
+    type2resGraph->GetYaxis()->SetTitle("Type 2 Residual");
 
-     type1fracGraph->GetXaxis()->SetTitle("Time");
-     type1resGraph->GetXaxis()->SetTitle("Time");
-     type2resGraph->GetXaxis()->SetTitle("Time");
+    type1fracGraph->GetXaxis()->SetTitle("Unique LS ID");
+    type1resGraph->GetXaxis()->SetTitle("Unique LS ID");
+    type2resGraph->GetXaxis()->SetTitle("Unique LS ID");
  
-     type1fracGraph->Draw("ap");
-     type1resGraph->Draw("ap");
-     type2resGraph->Draw("ap");
+    type1fracGraph->Draw("ap");
+    type1resGraph->Draw("ap");
+    type2resGraph->Draw("ap");
 
-     type1fracGraph->Write();
-     type1resGraph->Write();
-     type2resGraph->Write();
+    type1fracGraph->Write();
+    type1resGraph->Write();
+    type2resGraph->Write();
 
-     type1fracHist->Write();
-     type1resHist->Write();
-     type2resHist->Write();
-     outf->Write();
+    type1fracHist->Write();
+    type1resHist->Write();
+    type2resHist->Write();
+    outf->Write();
 
     //reset! 
     myInfoPointers.clear();
-
-    
-
- 
 
 }
 
