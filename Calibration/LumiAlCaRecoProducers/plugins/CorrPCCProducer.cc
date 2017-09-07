@@ -581,6 +581,9 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
         totalLumiByBX_=it->second->getInstLumiAllBX();
         //Stat error is number of events
         events_=it->second->getErrorLumiAllBX();
+        if(events_.size()==0){
+            continue;
+        }
 
         CalculateCorrections(totalLumiByBX_,corr_list_, Overall_corr); 
 
