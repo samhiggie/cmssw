@@ -308,11 +308,6 @@ void CorrPCCProducer::CalculateCorrections (std::vector<float> uncorrected, std:
         corrected_tmp_.push_back(uncorrected.at(i));
     }
 
-    //Apply initial type 1 correction
-    for(size_t k=0;k<LumiConstants::numBX-1; k++){ 
-  
-    }
- 
 
     //Apply all corrections
     for(size_t i=0; i<LumiConstants::numBX-1; i++){
