@@ -106,6 +106,7 @@ class CorrPCCProducer : public edm::one::EDProducer<edm::EndRunProducer,edm::one
     //std::vector<std::pair<int,int>> iovs;//move this to global later 
     std::map<std::pair<int,int>, LumiInfo*>::iterator it; 
     std::map<std::pair<int,int>, LumiInfo*> myInfoPointers;//map to obtain iov for lumiOb corrections to the luminosity. 
+    unsigned int minimumNumberOfEvents;
     //The Penultimate solution....
     //std::vector<std::pair<std::pair<int,int>,LumiInfo*>> myInfoVector;//Will save this object to the run
 
@@ -174,6 +175,7 @@ CorrPCCProducer::CorrPCCProducer(const edm::ParameterSet& iConfig)
     type2_b_ = iConfig.getParameter<edm::ParameterSet>("CorrPCCProducerParameters").getParameter<double>("type2_b");
     //Initialization of Params
     countLumi_=0;
+    minimumNumberOfEvents=100;
     //resetNLumi_=10;
     //the LS range for the product instance
 
@@ -304,16 +306,23 @@ void CorrPCCProducer::EstimateType1Frac(std::vector<float> uncorrPCCPerBX, float
    
         //Where type 1 and type 2 residuals are computed
         if(lumi>threshold && lumiP1<threshold && lumiP2<threshold){
-            mean_type1+=(lumiP1-(lumiP3+lumiP4+lumiP5)/3)/lumi;
-            //mean_type2+=(lumiP3+lumiP4+lumiP5)/(3*lumi);
+            float thisType1=(lumiP1-(lumiP3+lumiP4+lumiP5)/3)/lumi;
+            mean_type1+=thisType1;
+            //if(thisType1>0){
+            //    mean_type1+=thisType1;
+            //} else {
+            //    std::cout<<"nTrain "<<nTrain<<" thisType1 "<<thisType1<<std::endl;
+            //    std::cout<<"lumi p3 p4 p5 "<<lumi<<" "<<lumiP3<<" "<<lumiP4<<" "<<lumiP5<<std::endl;
+            //}
             nTrain+=1;
         }
     } 
     //Added condition in case nTrain is 0 and we get the nan(s)  
     if (nTrain!=0){
-    mean_type1 = mean_type1/nTrain;
+        mean_type1 = mean_type1/nTrain;
+    }else{
+        mean_type1=0;
     }
-    else{mean_type1=0;}
 
     type1frac+=mean_type1;
     //t1fUncVect.push_back(mean_type1);
@@ -328,6 +337,8 @@ void CorrPCCProducer::CalculateCorrections (std::vector<float> uncorrected, std:
     EstimateType1Frac(uncorrected, type1frac);
     std::cout<<type1frac<<std::endl;
 
+    //correction should never be negative
+    type1frac=std::max(0.0,(double)type1frac); 
 
     //Make Histos for uncorrected and uncrorrected*corr_list_
 
@@ -461,6 +472,16 @@ void CorrPCCProducer::endLuminosityBlock(edm::LuminosityBlock const& lumiSeg, co
     rawlumiBX_= inLumiOb.getInstLumiAllBX();
     errOnLumiByBX_= inLumiOb.getErrorLumiAllBX();
 
+    unsigned int totalEvents=0;
+    for(unsigned int bx=0;bx<LumiConstants::numBX;bx++){
+        totalEvents+=errOnLumiByBX_[bx];
+    }
+
+    if(totalEvents<minimumNumberOfEvents){
+        std::cout<<"number of events in this LS is too few "<<totalEvents<<std::endl;
+        std::cout<<"total error in lumi info "<<inLumiOb.statErrorOnLumi()<<std::endl;
+        return;
+    }
         
     LumiInfo* thisLSLumiInfo; //lumioutput object but will be used with map and saved to Run
     std::memcpy(&thisLSLumiInfo,&inLumiOb,sizeof(thisLSLumiInfo));
@@ -560,6 +581,9 @@ void CorrPCCProducer::endRunProduce(edm::Run& runSeg, const edm::EventSetup& iSe
         totalLumiByBX_=it->second->getInstLumiAllBX();
         //Stat error is number of events
         events_=it->second->getErrorLumiAllBX();
+        if(events_.size()==0){
+            continue;
+        }
 
         CalculateCorrections(totalLumiByBX_,corr_list_, Overall_corr); 
 
