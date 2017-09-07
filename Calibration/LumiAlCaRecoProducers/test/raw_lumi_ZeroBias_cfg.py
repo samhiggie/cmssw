@@ -54,7 +54,7 @@ process.PoolDBESSource = cms.ESSource("PoolDBESSource",
         record = cms.string('LumiCorrectionsRcd'),
         tag = cms.string("TestCorrections")
     )),
-    connect = cms.string('sqlite_file:correctionsC.db')
+    connect = cms.string('sqlite_file:correctionsC_297411.db')
 )
 
 
