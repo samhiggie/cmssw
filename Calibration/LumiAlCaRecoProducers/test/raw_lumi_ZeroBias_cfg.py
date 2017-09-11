@@ -1,10 +1,5 @@
 #########################
 #Author: Sam Higginbotham
-'''
-* Purpose :
-* Creation Date : 14-08-2017
-* Last Modified :
-'''
 #########################
 import FWCore.ParameterSet.Config as cms
 
@@ -54,7 +49,7 @@ process.PoolDBESSource = cms.ESSource("PoolDBESSource",
         record = cms.string('LumiCorrectionsRcd'),
         tag = cms.string("TestCorrections")
     )),
-    connect = cms.string('sqlite_file:correctionsC_297411.db')
+    connect = cms.string('sqlite_file:GlobalCorr.db')
 )
 
 
