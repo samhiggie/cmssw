@@ -33,7 +33,7 @@ scram b -j 16
 ## Running
 
 
-First complete the corrections using the Random triggered data set. 
+First, complete the corrections using the Random triggered data set. 
 To change the configuration you may edit the file:
 ```
 Calibration/LumiAlCaRecoProducers/test/raw_corr_Random_cfg.py 
@@ -48,9 +48,8 @@ crab submit -c  Calibration/LumiAlCaRecoProducers/test/crab3_raw_corr.py
 ```
 If you decide to edit the naming conventions for the input and output please make sure that they match the corresponding string in the 
  JobType.outputFiles line within the crab job. 
-orocess.outpath = cms.EndPath(process.out)
 
-Second complete the application of the corrections using the ZeroBias triggered data set. 
+Second, complete the application of the corrections using the ZeroBias triggered data set. 
 To change the configuration you may edit the file:
 ```
 Calibration/LumiAlCaRecoProducers/test/raw_lumi_ZeroBias_cfg.py
@@ -59,10 +58,27 @@ You may also test that it is working locally by doing:
 ```
 cmsRun Calibration/LumiAlCaRecoProducers/test/raw_lumi_ZeroBias_cfg.py 
 ```
+The database (db) files that we use to hold the corrections aren't automatically appended to a glob
+al version that can be applied at the crab level. Therefore BEFORE running crab3_raw_lumi.py please
+ concatenate the db files using combine.sh:
+```
+cp Calibration/LumiAlCaRecoProducers/test/combine.sh /eos/cms/store/group/comm_luminosity/PCC/ForLu
+miSystematics/Path/to/crab3_raw_corr.py/output/. 
+
+cd /eos/cms/store/group/comm_luminosity/PCC/ForLumiSystematics/Path/to/crab3_raw_corr.py/output/.
+
+./combine.sh
+
+mv GlobalCorr.db ${CMSSW_BASE}/src/Calibration/LumiAlCaRecoProducers/test/.  
+
+```
+Now you are ready to run the crab job. Make sure that the db file in the configuration file matches
+ the one you just created and moved. 
 To run a crab job using this file you may use:
 ```
 crab submit -c  Calibration/LumiAlCaRecoProducers/test/crab3_raw_lumi.py
 ```
+
 
 If you decide to edit the naming conventions for the input and output please make sure that they match the corresponding string in the 
  JobType.outputFiles line and the JobType.inputFiles line within the crab job.
