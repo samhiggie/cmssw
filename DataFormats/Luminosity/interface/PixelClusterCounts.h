@@ -37,6 +37,20 @@ class PixelClusterCounts {
         void eventCounter(unsigned int  bxID){
                 m_events.at(bxID-1)++;
         }
+    
+        void sum(PixelClusterCounts pcc0,PixelClusterCounts pcc1){
+            //std::transform(pcc0.m_counts.begin(), pcc0.m_counts.end(),pcc1.m_counts.begin(), pcc0.m_counts.begin(),std::plus<int>());
+                for(unsigned int i=0;i<pcc0.m_counts.size();i++){
+                    m_counts.at(i) = pcc0.m_counts.at(i) + pcc1.m_counts.at(i);
+                } 
+        }
+
+        void add(PixelClusterCounts pcc0){
+            //std::transform(pcc0.m_counts.begin(), pcc0.m_counts.end(),pcc1.m_counts.begin(), pcc0.m_counts.begin(),std::plus<int>());
+                for(unsigned int i=0;i<pcc0.m_counts.size();i++){
+                    m_counts.at(i) = pcc0.m_counts.at(i);
+                } 
+        }
 
         std::vector<int> const & readCounts() const {
             return(m_counts);
