@@ -21,6 +21,9 @@
 <library   file="AlcaPCCProducer.cc" name="AlcaPCCProducer">
   <flags   EDM_PLUGIN="1"/>
 </library>
+<library   file="AlcaPCCEventProducer.cc" name="AlcaPCCEventProducer">
+  <flags   EDM_PLUGIN="1"/>
+</library>
 <library   file="RawPCCProducer.cc" name="RawPCCProducer">
   <flags   EDM_PLUGIN="1"/>
 </library>
